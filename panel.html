@@ -355,7 +355,7 @@ const fmt  = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padS
 function currentElapsed(n) {
   const match = m(n)
   if (match.running && match.startedAt) {
-    return match.elapsedAtPause + Math.floor((Date.now() - match.startedAt) / 1000)
+    return Math.max(0, match.elapsedAtPause + Math.floor((Date.now() - match.startedAt) / 1000))
   }
   return match.elapsedAtPause
 }
@@ -478,10 +478,15 @@ function goal(n, side, delta) {
 }
 
 // ── CRONOMETRO ───────────────────────────────────────────────────────
-function startTimer(n) {
+async function startTimer(n) {
   if (m(n).running) return
+
+  // Obtener timestamp del servidor para que todos los dispositivos usen la misma referencia
+  const { data: tsData } = await sb.rpc('get_server_time')
+  const serverNow = tsData ? new Date(tsData).getTime() : Date.now()
+
   m(n).running = true
-  m(n).startedAt = Date.now()
+  m(n).startedAt = serverNow
   m(n).elapsedAtPause = m(n).elapsedAtPause || 0
   document.getElementById('h1_'+n).disabled = true
   document.getElementById('h2_'+n).disabled = true

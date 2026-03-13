@@ -44,27 +44,19 @@
   }
   .d-team {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(1.8rem, 6vw, 4rem);
+    font-size: clamp(1.8rem, 3.8vw, 4rem);
     color: #f5d000; letter-spacing: 3px; line-height: 1;
     text-shadow: 0 2px 10px rgba(0,0,0,.5); text-align: center;
   }
-  .two-matches .d-team { font-size: clamp(1.4rem, 5vw, 2.8rem); }
+  .two-matches .d-team { font-size: clamp(1.4rem, 3vw, 2.8rem); }
 
   .d-period {
     background: #f5d000; color: #000;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(0.85rem, 5vw, 4rem); font-weight: bold;
-    letter-spacing: 3px; padding: 5px 10px; border-radius: 3px;
+    font-size: clamp(0.85rem, 3vw, 2rem); font-weight: bold;
+    letter-spacing: 3px; padding: 5px 18px; border-radius: 3px;
     white-space: nowrap; text-align: center; width: 70%; margin: 0 auto;
-    text-align: center;
   }
-
-  .two-matches .d-period {
-    width: 100%;
-    font-size: clamp(0.85rem, 3vw, 4rem);
-  }
-
-
 
   /* MID */
   .d-mid {
@@ -84,7 +76,7 @@
     color: #fff; line-height: 0.85;
     text-shadow: 0 4px 20px rgba(0,0,0,.4); position: relative;
   }
-  .two-matches .d-score { font-size: clamp(5rem, 20vw, 18rem); }
+  .two-matches .d-score { font-size: clamp(5rem, 16vw, 18rem); }
 
   .d-shield {
     width: clamp(40px, 12vw, 200px); height: clamp(40px, 18vw, 200px);
@@ -99,10 +91,10 @@
   .d-timer-wrap { display: flex; align-items: flex-start; justify-content: center; height: 70%; }
   .d-timer {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(1.8rem, 12vw, 12rem);
+    font-size: clamp(1.8rem, 8vw, 8rem);
     color: #fff; letter-spacing: 5px; transition: color 0.4s;
   }
-  .two-matches .d-timer { font-size: clamp(1.2rem, 16vw,10rem); }
+  .two-matches .d-timer { font-size: clamp(1.2rem, 3vw, 2.5rem); }
   .d-timer.extra { color: #e84a4a; }
 
   /* Banner publicidad */
@@ -149,13 +141,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 let local = { m1:null, m2:null, mode:1 }
 let ticker = null
 let adsLoaded = false
+let serverOffset = 0  // diferencia entre reloj del servidor y del cliente
 
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 const fmt = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')
 
 function currentElapsed(m) {
   if (m.running && m.startedAt) {
-    return (m.elapsedAtPause || 0) + Math.floor((Date.now() - m.startedAt) / 1000)
+    return Math.max(0, (m.elapsedAtPause || 0) + Math.floor((Date.now() + serverOffset - m.startedAt) / 1000))
   }
   return m.elapsedAtPause || m.elapsed || 0
 }
@@ -248,6 +241,12 @@ function applyState(e) {
 
 // ── SUPABASE ──────────────────────────────────────────────────────────
 async function init() {
+  // Sincronizar reloj con el servidor para compensar diferencias entre dispositivos
+  try {
+    const { data: tsData } = await sb.rpc('get_server_time')
+    if (tsData) serverOffset = new Date(tsData).getTime() - Date.now()
+  } catch(e) {}
+
   // Cargar estado inicial
   const { data } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
   if (data) applyState(data.estado)
