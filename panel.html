@@ -32,7 +32,28 @@
   }
   .btn-display:active { background: var(--accent); color: #000; }
 
-  .body { padding: 14px; display: flex; flex-direction: column; gap: 14px; max-width: 500px; margin: 0 auto; }
+  /* BODY — 1 columna por defecto, 2 en escritorio cuando hay 2 partidos */
+  .body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* En escritorio con 2 partidos activos */
+  @media (min-width: 900px) {
+    body.two-matches .body {
+      max-width: 1100px;
+    }
+    body.two-matches .matches-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+  }
 
   .mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .modeBtn {
@@ -94,10 +115,10 @@
   .halfBtn.active { background: var(--accent); border-color: var(--accent); color: #000; }
   .halfBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  .timer-section { display: flex; flex-direction: column; gap: 8px; }
+  .timer-section { display: flex; flex-direction: column; gap: 20px; }
   .timer-display { font-size: 2.4rem; font-weight: 700; color: var(--accent); text-align: center; letter-spacing: 6px; font-variant-numeric: tabular-nums; }
   .timer-display.extra { color: var(--danger); }
-  .timer-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .timer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .tbtn {
     padding: 12px; border: 1px solid var(--border); background: var(--surface2);
     color: var(--text); font-size: 0.8rem; font-weight: 700;
@@ -110,7 +131,7 @@
   .tbtn.reset { border-color: var(--danger); color: var(--danger); }
   .tbtn.reset:active { background: var(--danger); color: #fff; }
 
-  .dur-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--muted); justify-content: center; }
+  .dur-row { display: flex; align-items: center; gap: 8px; font-size: 1rem; color: var(--muted); justify-content: center; }
   .settime-row { display: flex; align-items: center; gap: 6px; justify-content: center; }
   .settime-row input {
     background: var(--surface2); border: 1px solid var(--border); color: var(--text);
@@ -154,8 +175,6 @@
     cursor: pointer; border-radius: 8px; width: 100%; text-transform: uppercase;
   }
   .btn-reset:active { border-color: var(--danger); color: var(--danger); }
-
-
 </style>
 </head>
 <body>
@@ -177,137 +196,147 @@
     <button class="modeBtn"        id="m2btn" onclick="setMode(2)">2 Partidos</button>
   </div>
 
-  <!-- PARTIDO 1 -->
-  <div class="card" id="block1">
-    <div class="card-header">
-      <span>Partido 1</span>
-      <label class="vis-toggle">
-        <input type="checkbox" id="vis1" checked onchange="push()"> Visible
-      </label>
-    </div>
-    <div class="card-body">
-      <div class="teams-grid">
-        <div><div class="field-label">Local</div><input class="tinput" id="local1" value="LOCAL" onchange="push()"></div>
-        <div><div class="field-label">Visitante</div><input class="tinput" id="visitor1" value="VISITANTE" onchange="push()"></div>
+  <div class="matches-wrapper">
+    <!-- PARTIDO 1 -->
+    <div class="card" id="block1">
+      <div class="card-header">
+        <span>Partido 1</span>
+        <label class="vis-toggle">
+          <input type="checkbox" id="vis1" checked onchange="push()"> Visible
+        </label>
       </div>
-      <div class="shields-grid">
-        <div class="shield-loader">
-          <div class="field-label">Escudo local</div>
-          <div class="shield-box" id="sb_l1" onclick="document.getElementById('sf_l1').click()"><span>Escudo</span></div>
-          <input type="file" id="sf_l1" accept="image/*" onchange="loadShield('l1',this)">
-          <button class="shield-rm" id="srm_l1" style="display:none" onclick="removeShield('l1')">Quitar</button>
+      <div class="card-body">
+        <div>
+          <div class="field-label">Categoria</div>
+          <input class="tinput" id="cat1" value="" onchange="push()">
         </div>
-        <div class="shield-loader">
-          <div class="field-label">Escudo visitante</div>
-          <div class="shield-box" id="sb_v1" onclick="document.getElementById('sf_v1').click()"><span>Escudo</span></div>
-          <input type="file" id="sf_v1" accept="image/*" onchange="loadShield('v1',this)">
-          <button class="shield-rm" id="srm_v1" style="display:none" onclick="removeShield('v1')">Quitar</button>
+        <div class="teams-grid">
+          <div><div class="field-label">Local</div><input class="tinput" id="local1" value="LOCAL" onchange="push()"></div>
+          <div><div class="field-label">Visitante</div><input class="tinput" id="visitor1" value="VISITANTE" onchange="push()"></div>
         </div>
-      </div>
-      <div class="score-row">
-        <div class="score-side">
-          <button class="scBtn minus" onclick="goal(1,'l',-1)">&#8722;</button>
-          <button class="scBtn plus"  onclick="goal(1,'l', 1)">+</button>
-        </div>
-        <div class="score-display" id="scoreDisp1">0 - 0</div>
-        <div class="score-side right">
-          <button class="scBtn plus"  onclick="goal(1,'v', 1)">+</button>
-          <button class="scBtn minus" onclick="goal(1,'v',-1)">&#8722;</button>
-        </div>
-      </div>
-      <div class="half-row">
-        <button class="halfBtn active" id="h1_1" onclick="setHalf(1,1)">1a Parte</button>
-        <button class="halfBtn"        id="h2_1" onclick="setHalf(1,2)">2a Parte</button>
-      </div>
-      <div class="timer-section">
-        <div class="timer-display" id="tNum1">00:00</div>
-        <div class="timer-btns">
-          <div style="position:relative">
-            <button class="tbtn start" id="tS1" onclick="startTimer(1)" style="width:100%">Inicio</button>
-            <button class="tbtn pause" id="tP1" onclick="pauseTimer(1)" style="display:none;position:absolute;inset:0;width:100%">Pausa</button>
+        <div class="shields-grid">
+          <div class="shield-loader">
+            <div class="field-label">Escudo local</div>
+            <div class="shield-box" id="sb_l1" onclick="document.getElementById('sf_l1').click()"><span>Escudo</span></div>
+            <input type="file" id="sf_l1" accept="image/*" onchange="loadShield('l1',this)">
+            <button class="shield-rm" id="srm_l1" style="display:none" onclick="removeShield('l1')">Quitar</button>
           </div>
-          <button class="tbtn reset" onclick="resetTimer(1)">Reset</button>
-          <div></div>
+          <div class="shield-loader">
+            <div class="field-label">Escudo visitante</div>
+            <div class="shield-box" id="sb_v1" onclick="document.getElementById('sf_v1').click()"><span>Escudo</span></div>
+            <input type="file" id="sf_v1" accept="image/*" onchange="loadShield('v1',this)">
+            <button class="shield-rm" id="srm_v1" style="display:none" onclick="removeShield('v1')">Quitar</button>
+          </div>
         </div>
-        <div class="settime-row">
-          <input type="number" id="setMin1" min="0" max="99" value="0" placeholder="MM">
-          <span>:</span>
-          <input type="number" id="setSec1" min="0" max="59" value="0" placeholder="SS">
-          <button class="settime-btn" onclick="setManualTime(1)">Establecer</button>
+        <div class="score-row">
+          <div class="score-side">
+            <button class="scBtn minus" onclick="goal(1,'l',-1)">&#8722;</button>
+            <button class="scBtn plus"  onclick="goal(1,'l', 1)">+</button>
+          </div>
+          <div class="score-display" id="scoreDisp1">0 - 0</div>
+          <div class="score-side right">
+            <button class="scBtn plus"  onclick="goal(1,'v', 1)">+</button>
+            <button class="scBtn minus" onclick="goal(1,'v',-1)">&#8722;</button>
+          </div>
         </div>
-        <div class="dur-row">
-          <span>Min por parte:</span>
-          <input type="number" id="dur1" value="45" min="1" max="60" onchange="push()">
+        <div class="half-row">
+          <button class="halfBtn active" id="h1_1" onclick="setHalf(1,1)">1a Parte</button>
+          <button class="halfBtn"        id="h2_1" onclick="setHalf(1,2)">2a Parte</button>
+        </div>
+        <div class="timer-section">
+          <div class="timer-display" id="tNum1">00:00</div>
+          <div class="timer-btns">
+            <div style="position:relative">
+              <button class="tbtn start" id="tS1" onclick="startTimer(1)" style="width:100%">Inicio</button>
+              <button class="tbtn pause" id="tP1" onclick="pauseTimer(1)" style="display:none;position:absolute;inset:0;width:100%">Pausa</button>
+            </div>
+            <button class="tbtn reset" onclick="resetTimer(1)">Reset</button>
+            <div></div>
+          </div>
+          <div class="settime-row">
+            <input type="number" id="setMin1" min="0" max="99" value="0" placeholder="MM">
+            <span>:</span>
+            <input type="number" id="setSec1" min="0" max="59" value="0" placeholder="SS">
+            <button class="settime-btn" onclick="setManualTime(1)">Establecer</button>
+          </div>
+          <div class="dur-row">
+            <span>Min por parte:</span>
+            <input type="number" id="dur1" value="45" min="1" max="60" onchange="push()">
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- PARTIDO 2 -->
-  <div class="card" id="block2">
-    <div class="card-header">
-      <span>Partido 2</span>
-      <label class="vis-toggle">
-        <input type="checkbox" id="vis2" checked onchange="push()"> Visible
-      </label>
-    </div>
-    <div class="card-body">
-      <div class="teams-grid">
-        <div><div class="field-label">Local</div><input class="tinput" id="local2" value="LOCAL" onchange="push()"></div>
-        <div><div class="field-label">Visitante</div><input class="tinput" id="visitor2" value="VISITANTE" onchange="push()"></div>
+    <!-- PARTIDO 2 -->
+    <div class="card" id="block2">
+      <div class="card-header">
+        <span>Partido 2</span>
+        <label class="vis-toggle">
+          <input type="checkbox" id="vis2" checked onchange="push()"> Visible
+        </label>
       </div>
-      <div class="shields-grid">
-        <div class="shield-loader">
-          <div class="field-label">Escudo local</div>
-          <div class="shield-box" id="sb_l2" onclick="document.getElementById('sf_l2').click()"><span>Escudo</span></div>
-          <input type="file" id="sf_l2" accept="image/*" onchange="loadShield('l2',this)">
-          <button class="shield-rm" id="srm_l2" style="display:none" onclick="removeShield('l2')">Quitar</button>
+      <div class="card-body">
+        <div>
+          <div class="field-label">Categoria</div>
+          <input class="tinput" id="cat2" value="" onchange="push()">
         </div>
-        <div class="shield-loader">
-          <div class="field-label">Escudo visitante</div>
-          <div class="shield-box" id="sb_v2" onclick="document.getElementById('sf_v2').click()"><span>Escudo</span></div>
-          <input type="file" id="sf_v2" accept="image/*" onchange="loadShield('v2',this)">
-          <button class="shield-rm" id="srm_v2" style="display:none" onclick="removeShield('v2')">Quitar</button>
+        <div class="teams-grid">
+          <div><div class="field-label">Local</div><input class="tinput" id="local2" value="LOCAL" onchange="push()"></div>
+          <div><div class="field-label">Visitante</div><input class="tinput" id="visitor2" value="VISITANTE" onchange="push()"></div>
         </div>
-      </div>
-      <div class="score-row">
-        <div class="score-side">
-          <button class="scBtn minus" onclick="goal(2,'l',-1)">&#8722;</button>
-          <button class="scBtn plus"  onclick="goal(2,'l', 1)">+</button>
-        </div>
-        <div class="score-display" id="scoreDisp2">0 - 0</div>
-        <div class="score-side right">
-          <button class="scBtn plus"  onclick="goal(2,'v', 1)">+</button>
-          <button class="scBtn minus" onclick="goal(2,'v',-1)">&#8722;</button>
-        </div>
-      </div>
-      <div class="half-row">
-        <button class="halfBtn active" id="h1_2" onclick="setHalf(2,1)">1a Parte</button>
-        <button class="halfBtn"        id="h2_2" onclick="setHalf(2,2)">2a Parte</button>
-      </div>
-      <div class="timer-section">
-        <div class="timer-display" id="tNum2">00:00</div>
-        <div class="timer-btns">
-          <div style="position:relative">
-            <button class="tbtn start" id="tS2" onclick="startTimer(2)" style="width:100%">Inicio</button>
-            <button class="tbtn pause" id="tP2" onclick="pauseTimer(2)" style="display:none;position:absolute;inset:0;width:100%">Pausa</button>
+        <div class="shields-grid">
+          <div class="shield-loader">
+            <div class="field-label">Escudo local</div>
+            <div class="shield-box" id="sb_l2" onclick="document.getElementById('sf_l2').click()"><span>Escudo</span></div>
+            <input type="file" id="sf_l2" accept="image/*" onchange="loadShield('l2',this)">
+            <button class="shield-rm" id="srm_l2" style="display:none" onclick="removeShield('l2')">Quitar</button>
           </div>
-          <button class="tbtn reset" onclick="resetTimer(2)">Reset</button>
-          <div></div>
+          <div class="shield-loader">
+            <div class="field-label">Escudo visitante</div>
+            <div class="shield-box" id="sb_v2" onclick="document.getElementById('sf_v2').click()"><span>Escudo</span></div>
+            <input type="file" id="sf_v2" accept="image/*" onchange="loadShield('v2',this)">
+            <button class="shield-rm" id="srm_v2" style="display:none" onclick="removeShield('v2')">Quitar</button>
+          </div>
         </div>
-        <div class="settime-row">
-          <input type="number" id="setMin2" min="0" max="99" value="0" placeholder="MM">
-          <span>:</span>
-          <input type="number" id="setSec2" min="0" max="59" value="0" placeholder="SS">
-          <button class="settime-btn" onclick="setManualTime(2)">Establecer</button>
+        <div class="score-row">
+          <div class="score-side">
+            <button class="scBtn minus" onclick="goal(2,'l',-1)">&#8722;</button>
+            <button class="scBtn plus"  onclick="goal(2,'l', 1)">+</button>
+          </div>
+          <div class="score-display" id="scoreDisp2">0 - 0</div>
+          <div class="score-side right">
+            <button class="scBtn plus"  onclick="goal(2,'v', 1)">+</button>
+            <button class="scBtn minus" onclick="goal(2,'v',-1)">&#8722;</button>
+          </div>
         </div>
-        <div class="dur-row">
-          <span>Min por parte:</span>
-          <input type="number" id="dur2" value="45" min="1" max="60" onchange="push()">
+        <div class="half-row">
+          <button class="halfBtn active" id="h1_2" onclick="setHalf(2,1)">1a Parte</button>
+          <button class="halfBtn"        id="h2_2" onclick="setHalf(2,2)">2a Parte</button>
+        </div>
+        <div class="timer-section">
+          <div class="timer-display" id="tNum2">00:00</div>
+          <div class="timer-btns">
+            <div style="position:relative">
+              <button class="tbtn start" id="tS2" onclick="startTimer(2)" style="width:100%">Inicio</button>
+              <button class="tbtn pause" id="tP2" onclick="pauseTimer(2)" style="display:none;position:absolute;inset:0;width:100%">Pausa</button>
+            </div>
+            <button class="tbtn reset" onclick="resetTimer(2)">Reset</button>
+            <div></div>
+          </div>
+          <div class="settime-row">
+            <input type="number" id="setMin2" min="0" max="99" value="0" placeholder="MM">
+            <span>:</span>
+            <input type="number" id="setSec2" min="0" max="59" value="0" placeholder="SS">
+            <button class="settime-btn" onclick="setManualTime(2)">Establecer</button>
+          </div>
+          <div class="dur-row">
+            <span>Min por parte:</span>
+            <input type="number" id="dur2" value="45" min="1" max="60" onchange="push()">
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </div><!-- /matches-wrapper -->
 
   <!-- PUBLICIDAD -->
   <div class="card">
@@ -340,8 +369,8 @@ const S = {
   mode: 1,
   ads: [],
   m: [null,
-    { active:true, local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 },
-    { active:true, local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 }
+    { active:true, categoria:'', local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 },
+    { active:true, categoria:'', local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 }
   ]
 }
 const ivl = { 1:null, 2:null }
@@ -349,7 +378,6 @@ const ivl = { 1:null, 2:null }
 const m    = n => S.m[n]
 const dur  = n => (parseInt(document.getElementById('dur'+n).value)||45)*60
 const mxS  = n => m(n).half===1 ? dur(n) : dur(n)*2
-const xtra = n => currentElapsed(n) >= mxS(n)
 const fmt  = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')
 
 function currentElapsed(n) {
@@ -364,11 +392,11 @@ function currentElapsed(n) {
 let pushing = false
 
 function readFromDOM(n) {
-  // Sincroniza los campos del DOM al estado antes de mandar
-  m(n).local    = document.getElementById('local'  +n).value
-  m(n).visitor  = document.getElementById('visitor'+n).value
-  m(n).duration = parseInt(document.getElementById('dur'+n).value) || 45
-  m(n).active   = document.getElementById('vis'+n).checked
+  m(n).categoria = document.getElementById('cat'+n).value
+  m(n).local     = document.getElementById('local'+n).value
+  m(n).visitor   = document.getElementById('visitor'+n).value
+  m(n).duration  = parseInt(document.getElementById('dur'+n).value) || 45
+  m(n).active    = document.getElementById('vis'+n).checked
 }
 
 async function push() {
@@ -386,8 +414,7 @@ async function push() {
   pushing = false
 }
 
-// ── SUPABASE REALTIME ────────────────────────────────────────────────
-// Se llama tanto al cargar inicial como al recibir cambios remotos
+// ── APPLY STATE ──────────────────────────────────────────────────────
 function applyState(e, isRemote) {
   if (!e) return
   S.mode = e.mode || 1
@@ -397,13 +424,10 @@ function applyState(e, isRemote) {
     const src = e['m'+n]
     if (!src) return
 
-    const wasRunning  = m(n).running
-    const keepElapsed = isRemote && wasRunning && src.running
+    const wasRunning = m(n).running
 
     Object.assign(m(n), src)
-    if (keepElapsed) m(n).elapsed = S.m[n].elapsed  // conservar elapsed local
 
-    // Sincronizar intervalo si el estado running cambio remotamente
     if (isRemote) {
       if (src.running && !wasRunning) {
         document.getElementById('h1_'+n).disabled = true
@@ -420,10 +444,10 @@ function applyState(e, isRemote) {
       }
     }
 
-    // Actualizar UI
-    document.getElementById('local'  +n).value = src.local    || ''
-    document.getElementById('visitor'+n).value = src.visitor  || ''
-    document.getElementById('dur'    +n).value = src.duration || 45
+    document.getElementById('cat'+n).value      = src.categoria || ''
+    document.getElementById('local'+n).value    = src.local     || ''
+    document.getElementById('visitor'+n).value  = src.visitor   || ''
+    document.getElementById('dur'+n).value      = src.duration  || 45
     document.getElementById('scoreDisp'+n).textContent = m(n).gl+' - '+m(n).gv
     document.getElementById('h1_'+n).classList.toggle('active', src.half===1)
     document.getElementById('h2_'+n).classList.toggle('active', src.half===2)
@@ -440,6 +464,9 @@ function applyState(e, isRemote) {
   document.getElementById('block2').style.display = S.mode===2 ? '' : 'none'
   document.getElementById('vis1').checked = e.m1?.active !== false
   if (e.m2) document.getElementById('vis2').checked = e.m2?.active !== false
+
+  // Clase en body para layout 2 columnas
+  document.body.classList.toggle('two-matches', S.mode===2)
 }
 
 function setStatus(ok) {
@@ -453,16 +480,17 @@ function setMode(mode) {
   document.getElementById('m1btn').classList.toggle('active', mode===1)
   document.getElementById('m2btn').classList.toggle('active', mode===2)
   document.getElementById('block2').style.display = mode===2 ? '' : 'none'
+  document.body.classList.toggle('two-matches', mode===2)
   push()
 }
 
 // ── PARTES ───────────────────────────────────────────────────────────
 function setHalf(n, half) {
   if (m(n).running) return
-  m(n).half          = half
-  m(n).elapsed       = half===1 ? 0 : dur(n)
+  m(n).half           = half
+  m(n).elapsed        = half===1 ? 0 : dur(n)
   m(n).elapsedAtPause = m(n).elapsed
-  m(n).startedAt     = null
+  m(n).startedAt      = null
   document.getElementById('h1_'+n).classList.toggle('active', half===1)
   document.getElementById('h2_'+n).classList.toggle('active', half===2)
   refreshTimerPanel(n)
@@ -480,13 +508,10 @@ function goal(n, side, delta) {
 // ── CRONOMETRO ───────────────────────────────────────────────────────
 async function startTimer(n) {
   if (m(n).running) return
-
-  // Obtener timestamp del servidor para que todos los dispositivos usen la misma referencia
   const { data: tsData } = await sb.rpc('get_server_time')
   const serverNow = tsData ? new Date(tsData).getTime() : Date.now()
-
-  m(n).running = true
-  m(n).startedAt = serverNow
+  m(n).running        = true
+  m(n).startedAt      = serverNow
   m(n).elapsedAtPause = m(n).elapsedAtPause || 0
   document.getElementById('h1_'+n).disabled = true
   document.getElementById('h2_'+n).disabled = true
@@ -500,9 +525,9 @@ function pauseTimer(n) {
   if (!m(n).running) return
   clearInterval(ivl[n]); ivl[n] = null
   m(n).elapsedAtPause = currentElapsed(n)
-  m(n).elapsed = m(n).elapsedAtPause
-  m(n).running = false
-  m(n).startedAt = null
+  m(n).elapsed        = m(n).elapsedAtPause
+  m(n).running        = false
+  m(n).startedAt      = null
   document.getElementById('h1_'+n).disabled = false
   document.getElementById('h2_'+n).disabled = false
   document.getElementById('tS'+n).style.display = ''
@@ -512,18 +537,17 @@ function pauseTimer(n) {
 
 function resetTimer(n) {
   pauseTimer(n)
-  m(n).elapsed = m(n).half===1 ? 0 : dur(n)
+  m(n).elapsed        = m(n).half===1 ? 0 : dur(n)
   m(n).elapsedAtPause = m(n).elapsed
-  m(n).startedAt = null
+  m(n).startedAt      = null
   refreshTimerPanel(n)
   push()
 }
 
 function setManualTime(n) {
-  const mins = parseInt(document.getElementById('setMin'+n).value) || 0
-  const secs = parseInt(document.getElementById('setSec'+n).value) || 0
+  const mins  = parseInt(document.getElementById('setMin'+n).value) || 0
+  const secs  = parseInt(document.getElementById('setSec'+n).value) || 0
   const total = mins * 60 + secs
-  // Si está corriendo, pausar primero
   if (m(n).running) pauseTimer(n)
   m(n).elapsed        = total
   m(n).elapsedAtPause = total
@@ -536,7 +560,7 @@ function refreshTimerPanel(n) {
   const el = document.getElementById('tNum'+n)
   const e  = currentElapsed(n)
   el.textContent = fmt(e)
-  el.className   = 'timer-display'+(e >= mxS(n) ?' extra':'')
+  el.className   = 'timer-display'+(e >= mxS(n) ? ' extra' : '')
 }
 
 // ── ESCUDOS ──────────────────────────────────────────────────────────
@@ -601,7 +625,7 @@ function renderAds() {
 function resetAll() {
   ;[1,2].forEach(n => {
     pauseTimer(n)
-    m(n).gl=0; m(n).gv=0; m(n).half=1; m(n).elapsed=0
+    m(n).gl=0; m(n).gv=0; m(n).half=1; m(n).elapsed=0; m(n).elapsedAtPause=0
     document.getElementById('scoreDisp'+n).textContent='0 - 0'
     document.getElementById('h1_'+n).classList.add('active')
     document.getElementById('h2_'+n).classList.remove('active')
@@ -612,24 +636,18 @@ function resetAll() {
 
 // ── INIT ─────────────────────────────────────────────────────────────
 async function init() {
-  // Ocultar bloque 2 por defecto
   document.getElementById('block2').style.display = 'none'
 
-  // 1. Cargar estado actual
   const { data, error } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
   if (!error && data) {
-    // Sanear estado corrupto: running=true sin startedAt no es válido
     const e = data.estado
     ;[1,2].forEach(n => {
-      if (e['m'+n]?.running && !e['m'+n]?.startedAt) {
-        e['m'+n].running = false
-      }
+      if (e['m'+n]?.running && !e['m'+n]?.startedAt) e['m'+n].running = false
     })
     applyState(e, false)
     setStatus(true)
   }
 
-  // 2. Suscribirse a cambios remotos (de otros paneles o dispositivos)
   sb.channel('marcador-panel')
     .on('postgres_changes', {
       event:  'UPDATE',
@@ -637,7 +655,7 @@ async function init() {
       table:  'marcador_estado',
       filter: 'id=eq.1'
     }, payload => {
-      if (pushing) return  // cambio originado por nosotros, ignorar
+      if (pushing) return
       applyState(payload.new.estado, true)
     })
     .subscribe(status => setStatus(status === 'SUBSCRIBED'))
