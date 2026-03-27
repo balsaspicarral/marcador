@@ -1,624 +1,322 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-    <title>Marcador – Display</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #1a1a1a;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marcador – Display</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; }
+    body { display: flex; flex-direction: column; font-family: "Bebas Neue", sans-serif; }
 
-      body {
-        display: flex;
-        flex-direction: column;
-        font-family: "Bebas Neue", sans-serif;
-      }
+    /* Marca de agua */
+    #bgLogo { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
+    #bgLogo img { width: 55%; opacity: 0.07; }
 
-      /* Marca de agua */
-      #bgLogo {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        z-index: 0;
-      }
-      #bgLogo img {
-        width: 55%;
-        opacity: 0.07;
-      }
+    /* Área partidos */
+    #displayMatches { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; min-height: 0; }
 
-      /* Área partidos */
-      #displayMatches {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        z-index: 1;
-        min-height: 0;
-      }
+    .d-match { flex: 1; display: grid; grid-template-rows: auto auto 1fr; min-height: 0; border-bottom: 2px solid #252525; }
+    .d-match:last-child { border-bottom: none; }
 
-      /* Un partido */
-      .d-match {
-        flex: 1;
-        display: grid;
-        grid-template-rows: auto auto 1fr;
-        min-height: 0;
-        border-bottom: 2px solid #252525;
-      }
-      .d-match:last-child {
-        border-bottom: none;
-      }
+    .d-top { display: flex; flex-direction: column; }
+    .d-categoria { font-family: sans-serif; font-size: clamp(1.8rem, 8vw, 3.5rem); color: #fff; line-height: 1; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); text-align: center; padding: 10px 0; }
+    .two-matches .d-categoria { font-size: clamp(1.8rem, 8vw, 2rem); }
+    .d-teams { display: grid; grid-template-columns: 1fr 25% 1fr; align-items: center; gap: 12px; padding: 20px 0; }
+    .two-matches .d-teams { grid-template-columns: 1fr 33% 1fr; padding: 0 0 30px 0; }
+    .d-team { font-family: "Decalotype", sans-serif; font-size: clamp(1.8rem, 6vw, 6rem); color: #f5d000; line-height: 1; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); text-align: center; }
+    .two-matches .d-team { font-size: clamp(1.4rem, 5vw, 5rem); }
+    .d-period { background: #f5d000; color: #000; font-family: "Bebas Neue", sans-serif; font-size: clamp(0.85rem, 10vw, 4rem); font-weight: bold; letter-spacing: 3px; padding: 5px 18px; border-radius: 3px; white-space: nowrap; text-align: center; width: 75%; margin: 0 auto; }
+    .two-matches .d-period { width: 100%; font-size: clamp(0.85rem, 10vw, 2rem); }
 
-      /* TOP */
-      .d-top {
-        display: flex;
-        flex-direction: column;
-      }
+    .d-mid { display: grid; grid-template-columns: 1fr 30% 1fr; align-items: center; gap: 6px; min-height: 0; }
+    .two-matches .d-mid { justify-items: center; }
+    .d-side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(6px, 1.2vh, 16px); position: relative; height: 100%; }
+    .two-matches .d-side { width: 50%; }
+    .d-score { display: flex; align-items: center; font-family: "Open Sans", sans-serif; font-weight: bold; font-size: clamp(7rem, 30vw, 60rem); color: #fff; line-height: 0.85; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); position: relative; height: 100%; bottom: 5%; }
+    .d-side.left .d-score { right: -10%; }
+    .two-matches .d-side.left .d-score { right: 0; bottom: 20%; }
+    .d-side.right .d-score { left: -10%; }
+    .two-matches .d-side.right .d-score { left: 0; bottom: 20%; }
+    .two-matches .d-score { font-size: clamp(5rem, 16vw, 18rem); }
+    .d-shield { width: clamp(40px, 15vw, 220px); height: clamp(40px, 20vw, 220px); object-fit: cover; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6)); position: absolute; }
+    .two-matches .d-shield { width: clamp(40px, 10vw, 250px); height: clamp(40px, 10vw, 250px); }
+    .d-side.left .d-shield { bottom: 15%; right: 75%; }
+    .two-matches .d-side.left .d-shield { right: 90%; bottom: 17%; }
+    .d-side.right .d-shield { bottom: 15%; left: 75%; }
+    .two-matches .d-side.right .d-shield { left: 90%; bottom: 17%; }
+    .d-timer { font-family: "Open Sans", sans-serif; font-size: clamp(1.8rem, 14vw, 12rem); font-weight: bold; letter-spacing: -5px; color: #fff; transition: color 0.4s; }
+    .two-matches .d-timer { font-size: clamp(1.2rem, 14vw, 12rem); bottom: 20%; position: relative; }
+    .d-timer.extra { color: #e84a4a; }
 
-      .d-categoria {
-        font-family: sans-serif;
-        font-size: clamp(1.8rem, 8vw, 3.5rem);
-        color: #fff;
-        line-height: 1;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        text-align: center;
-        padding: 10px 0;
-      }
+    /* Banner publicidad */
+    #banner { height: clamp(60px, 12vh, 100px); background: #111; overflow: hidden; display: flex; align-items: center; flex-shrink: 0; z-index: 1; }
+    .ads-track { display: flex; gap: 200px; align-items: center; animation: adsScroll 30s linear infinite; height: 100%; }
+    .ads-track img { height: 80%; object-fit: contain; }
+    @keyframes adsScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-      .two-matches .d-categoria {
-        font-size: clamp(1.8rem, 8vw, 2rem);
-      }
+    /* Overlay vídeo celebración - PANTALLA COMPLETA + FADE */
+    #goalVideoOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 500ms ease-in-out;
+    }
+    #goalVideoOverlay.show {
+      opacity: 1;
+    }
+    #goalVideo {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: #000;
+    }
 
-      .d-teams {
-        display: grid;
-        grid-template-columns: 1fr 25% 1fr;
-        align-items: center;
-        gap: 12px;
-        padding: 20px 0;
-      }
-      .two-matches .d-teams {
-        grid-template-columns: 1fr 33% 1fr;
-        padding: 0 0 30px 0;
-      }
+    @media (max-width: 576px) {
+      .d-match { border-bottom: 1px solid #252525; }
+      .d-categoria { font-size: clamp(1.5rem, 6vw, 2.5rem); padding: 20px 0 10px 0; }
+      .two-matches .d-categoria { font-size: clamp(1.5rem, 6vw, 2rem); padding: 40px 0; }
+      .d-teams { grid-template-columns: 1fr 20% 1fr; gap: 6px; padding: 10px 0; }
+      .d-team { font-size: clamp(1.2rem, 7vw, 10rem); }
+      .d-period { width: 90%; font-size: clamp(0.75rem, 8vw, 2rem); padding: 3px 10px; }
+      .two-matches .d-period { font-size: clamp(0.75rem, 8vw, 1rem); }
+      .d-mid { grid-template-columns: 1fr 35% 1fr; gap: 4px; }
+      .d-score { font-size: clamp(3rem, 50vw, 15rem); bottom: 10%; position: absolute; }
+      .two-matches .d-score{ font-size: clamp(3rem, 35vw, 15rem); }
+      .d-shield { width: clamp(30px, 25vw, 200px); height: clamp(30px, 25vw, 200px); }
+      .two-matches .d-shield { width: clamp(30px, 15vw, 200px); height: clamp(30px, 15vw, 200px); }
+      .d-side.left .d-shield { bottom: 5%; right: 5%; }
+      .two-matches .d-side.left .d-shield { right: -60%; bottom: 0%; }
+      .d-side.right .d-shield { bottom: 5%; left: 5%; }
+      .two-matches .d-side.right .d-shield { left: -60%; bottom: 0%; }
+      .d-timer { font-size: clamp(1rem, 20vw, 10rem); letter-spacing: 2px; position: absolute; bottom: 80%; }
+      .two-matches .d-timer{ bottom: 45%; }
+      #banner { height: clamp(40px, 10vh, 80px); padding: 10px 0; }
+      .ads-track { gap: 250px; }
+    }
 
-      .d-team {
-        font-family: "Decalotype", sans-serif;
-        font-size: clamp(1.8rem, 6vw, 6rem);
-        color: #f5d000;
-        line-height: 1;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        text-align: center;
-      }
-      .two-matches .d-team {
-        font-size: clamp(1.4rem, 5vw, 5rem);
-      }
-
-      .d-period {
-        background: #f5d000;
-        color: #000;
-        font-family: "Bebas Neue", sans-serif;
-        font-size: clamp(0.85rem, 10vw, 4rem);
-        font-weight: bold;
-        letter-spacing: 3px;
-        padding: 5px 18px;
-        border-radius: 3px;
-        white-space: nowrap;
-        text-align: center;
-        width: 75%;
-        margin: 0 auto;
-      }
-
-      .two-matches .d-period {
-        width: 100%;
-        font-size: clamp(0.85rem, 10vw, 2rem);
-      }
-
-      /* MID */
-      .d-mid {
-        display: grid;
-        grid-template-columns: 1fr 30% 1fr;
-        align-items: center;
-        gap: 6px;
-        min-height: 0;
-      }
-      .two-matches .d-mid {
-        justify-items: center;
-      }
-      .d-side {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: clamp(6px, 1.2vh, 16px);
-        position: relative;
-        height: 100%;
-      }
-      .two-matches .d-side {
-        width: 50%;
-      }
-      .d-score {
-        display: flex;
-        align-items: center;
-        font-family: "Open Sans", sans-serif;
-        font-weight: bold;
-        font-size: clamp(7rem, 30vw, 60rem);
-        color: #fff;
-        line-height: 0.85;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        position: relative;
-        height: 100%;
-        bottom: 5%;
-      }
-      .d-side.left .d-score {
-        right: -10%;
-      }
-      .two-matches .d-side.left .d-score {
-        right: 0;
-        bottom: 20%;
-      }
-      .d-side.right .d-score {
-        left: -10%;
-      }
-      .two-matches .d-side.right .d-score {
-        left: 0;
-        bottom: 20%;
-      }
-
-      .two-matches .d-score {
-        font-size: clamp(5rem, 16vw, 18rem);
-      }
-
-      .d-shield {
-        width: clamp(40px, 15vw, 220px);
-        height: clamp(40px, 20vw, 220px);
-        object-fit: cover;
-        filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
-        position: absolute;
-      }
-      .two-matches .d-shield {
-        width: clamp(40px, 10vw, 250px);
-        height: clamp(40px, 10vw, 250px);
-      }
-      .d-side.left .d-shield {
-        bottom: 15%;
-        right: 75%;
-      }
-      .two-matches .d-side.left .d-shield {
-        right: 90%;
-        bottom: 17%;
-      }
-      .d-side.right .d-shield {
-        bottom: 15%;
-        left: 75%;
-      }
-      .two-matches .d-side.right .d-shield {
-        left: 90%;
-        bottom: 17%;
-      }
-
-      .d-timer-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 70%;
-        position: absolute;
-      }
-      .d-timer {
-        font-family: "Open Sans", sans-serif;
-        font-size: clamp(1.8rem, 14vw, 12rem);
-        font-weight: bold;
-        letter-spacing: -5px;
-        color: #fff;
-        transition: color 0.4s;
-      }
-      .two-matches .d-timer {
-        font-size: clamp(1.2rem, 14vw, 12rem);
-        bottom: 20%;
-        position: relative;
-      }
-      .d-timer.extra {
-        color: #e84a4a;
-      }
-
-      /* Banner publicidad */
-      #banner {
-        height: clamp(60px, 12vh, 100px);
-        background: #111;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-        z-index: 1;
-      }
-      .ads-track {
-        display: flex;
-        gap: 200px;
-        align-items: center;
-        animation: adsScroll 30s linear infinite;
-        height: 100%;
-      }
-      .ads-track img {
-        height: 80%;
-        object-fit: contain;
-      }
-      @keyframes adsScroll {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-50%);
-        }
-      }
-
-      /* Estilos para móviles */
-      @media (max-width: 576px) {
-        /* Ajustes en cada partido */
-        .d-match {
-          border-bottom: 1px solid #252525;
-        }
-
-        /* TOP */
-        .d-categoria {
-          font-size: clamp(1.5rem, 6vw, 2.5rem);
-          padding: 20px 0 10px 0;
-        }
-
-        .two-matches .d-categoria {
-          font-size: clamp(1.5rem, 6vw, 2rem);
-          padding: 40px 0;
-        }
-
-        .d-teams {
-          grid-template-columns: 1fr 20% 1fr;
-          gap: 6px;
-          padding: 10px 0;
-        }
-
-        .d-team {
-          font-size: clamp(1.2rem, 7vw, 10rem);
-        }
-
-        .d-period {
-          width: 90%;
-          font-size: clamp(0.75rem, 8vw, 2rem);
-          padding: 3px 10px;
-        }
-
-        .two-matches .d-period {
-          font-size: clamp(0.75rem, 8vw, 1rem);
-        }
-
-        /* MID */
-        .d-mid {
-          grid-template-columns: 1fr 35% 1fr;
-          gap: 4px;
-        }
-
-        .d-score {
-          font-size: clamp(3rem, 50vw, 15rem);
-          bottom: 10%;
-          position: absolute;
-        }
-
-        .two-matches .d-score{
-          font-size: clamp(3rem, 35vw, 15rem);
-        }
-
-        .two-matches .d-side.left .d-score{
-          right: -20%;
-        }
-
-        .two-matches .d-side.right .d-score{
-          left: -20%;
-        }
-
-        .d-side.left .d-score::after {
-          content: " -"; /* espacio y guion */
-          color: #fff; /* mismo color que el score, opcional */
-          font-weight: bold; /* opcional */
-          position: absolute;
-          left: 125%;
-        }
-        
-        .two-matches .d-side.left .d-score::after {
-          position: absolute;
-          left: 190%;
-        }
-
-        .d-shield {
-          width: clamp(30px, 25vw, 200px);
-          height: clamp(30px, 25vw, 200px);
-        }
-        .two-matches .d-shield {
-          width: clamp(30px, 15vw, 200px);
-          height: clamp(30px, 15vw, 200px);
-        }
-        .d-side.left .d-shield {
-          bottom: 5%;
-          right: 5%;
-        }
-        .two-matches .d-side.left .d-shield {
-          right: -60%;
-          bottom: 0%;
-        }
-        .d-side.right .d-shield {
-          bottom: 5%;
-          left: 5%;
-        }
-        .two-matches .d-side.right .d-shield {
-          left: -60%;
-          bottom: 0%;
-        }
-
-        .d-timer {
-          font-size: clamp(1rem, 20vw, 10rem);
-          letter-spacing: 2px;
-          position: absolute;
-          bottom: 80%;
-        }
-
-        .two-matches .d-timer{
-          bottom: 45%;
-        }
-        /* Banner publicidad */
-        #banner {
-          height: clamp(40px, 10vh, 80px);
-          padding: 10px 0;
-        }
-        .ads-track {
-          gap: 250px;
-        }
-      }
-
-      /* Espera */
-      .d-waiting {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 12px;
-        color: #252525;
-      }
-      .d-waiting .dw-big {
-        font-size: 3rem;
-        letter-spacing: 5px;
-      }
-      .d-waiting .dw-small {
-        font-family: sans-serif;
-        font-size: 0.8rem;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-      }
-
-      @font-face {
-        font-family: "Decalotype";
-        src: url("decalotype.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-      }
-
-      @font-face {
-        font-family: "Extenda";
-        src: url("extenda.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="bgLogo"></div>
-    <div id="displayMatches">
-      <div class="d-waiting">
-        <div class="dw-big">⚽ MARCADOR</div>
-        <div class="dw-small">Esperando datos…</div>
-      </div>
+    @font-face {
+      font-family: "Decalotype"; src: url("decalotype.ttf") format("truetype"); font-weight: normal; font-style: normal;
+    }
+    @font-face {
+      font-family: "Extenda"; src: url("extenda.ttf") format("truetype"); font-weight: normal; font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div id="bgLogo"></div>
+  <div id="displayMatches">
+    <div class="d-waiting">
+      <div class="dw-big">⚽ MARCADOR</div>
+      <div class="dw-small">Esperando datos…</div>
     </div>
-    <div id="banner">
-      <div
-        class="ads-track"
-        id="adsTrack"
-      ></div>
-    </div>
+  </div>
+  <div id="banner">
+    <div class="ads-track" id="adsTrack"></div>
+  </div>
 
-    <script>
-      const SUPABASE_URL = "https://qfwhmbtalzmxxpjkywkc.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_CbWdRiNhYBOWdPFVHEy3Gg_ys3BOA2_";
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- Overlay vídeo celebración -->
+  <div id="goalVideoOverlay">
+    <video id="goalVideo" muted playsinline></video>
+  </div>
 
-      let local = { m1: null, m2: null, mode: 1 };
-      let ticker = null;
-      let adsLoaded = false;
-      let serverOffset = 0;
+  <script>
+    const SUPABASE_URL = "https://qfwhmbtalzmxxpjkywkc.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_CbWdRiNhYBOWdPFVHEy3Gg_ys3BOA2_";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      const esc = (s) =>
-        String(s || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      const fmt = (s) =>
-        String(Math.floor(s / 60)).padStart(2, "0") +
-        ":" +
-        String(s % 60).padStart(2, "0");
+    let local = { m1: null, m2: null, mode: 1 };
+    let prevGl = {1: 0, 2: 0};
+    let ticker = null;
+    let adsLoaded = false;
+    let serverOffset = 0;
 
-      function currentElapsed(m) {
-        if (m.running && m.startedAt) {
-          return Math.max(
-            0,
-            (m.elapsedAtPause || 0) +
-              Math.floor((Date.now() + serverOffset - m.startedAt) / 1000),
-          );
-        }
-        return m.elapsedAtPause || m.elapsed || 0;
+    const GOAL_VIDEO_URL = "./gol.mp4";
+
+    const esc = (s) => String(s || "") .replace(/&/g, "&amp;") .replace(/</g, "&lt;") .replace(/>/g, "&gt;");
+    const fmt = (s) => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+
+    function currentElapsed(m) {
+      if (m.running && m.startedAt) {
+        return Math.max(0, (m.elapsedAtPause || 0) + Math.floor((Date.now() + serverOffset - m.startedAt) / 1000));
+      }
+      return m.elapsedAtPause || m.elapsed || 0;
+    }
+
+    function render() {
+      const wrap = document.getElementById("displayMatches");
+      const active = [local.m1, local.m2].filter((m) => m && m.active);
+      wrap.classList.toggle("two-matches", active.length === 2);
+
+      if (!active.length) {
+        wrap.innerHTML = '<div class="d-waiting"><div class="dw-big">⚽</div><div class="dw-small">Sin partidos activos</div></div>';
+        return;
       }
 
-      // ── RENDER ────────────────────────────────────────────────────────────
-      function render() {
-        const wrap = document.getElementById("displayMatches");
-        const active = [local.m1, local.m2].filter((m) => m && m.active);
+      wrap.innerHTML = "";
+      active.forEach((m) => {
+        const matchNum = m === local.m1 ? 1 : 2;
+        const dur = (parseInt(m.duration) || 45) * 60;
+        const half = m.half || 1;
+        const elapsed = currentElapsed(m);
+        const isExtra = elapsed >= (half === 1 ? dur : dur * 2);
+        const time = fmt(elapsed);
+        const isMobile = window.innerWidth <= 768;
+        let halfStr = half === 1 ? "1ª PARTE" : "2ª PARTE";
+        if (isMobile) halfStr = half === 1 ? "1ª P" : "2ª P";
+        const period = active.length === 2 ? `CAMPO ${matchNum} · ${halfStr}` : halfStr;
 
-        wrap.classList.toggle("two-matches", active.length === 2);
+        const shieldL = m.shieldLocal ? `<img class="d-shield" src="${m.shieldLocal}">` : "";
+        const shieldV = m.shieldVisitor ? `<img class="d-shield" src="${m.shieldVisitor}">` : "";
 
-        if (!active.length) {
-          wrap.innerHTML =
-            '<div class="d-waiting"><div class="dw-big">⚽</div><div class="dw-small">Sin partidos activos</div></div>';
+        const div = document.createElement("div");
+        div.className = "d-match";
+        div.innerHTML = `
+          <div class="d-top">
+            ${m.categoria ? `<div class="d-categoria">${esc(m.categoria)}</div>` : ""}
+          </div>
+          <div class="d-teams">
+            <div class="d-team left">${esc(m.local)}</div>
+            <div class="d-period">${period}</div>
+            <div class="d-team right">${esc(m.visitor)}</div>
+          </div>
+          <div class="d-mid">
+            <div class="d-side left">
+              <div class="d-score">${m.gl}${shieldL}</div>
+            </div>
+            <div class="d-side timer">
+              <div class="d-timer${isExtra ? " extra" : ""}">${time}</div>
+            </div>
+            <div class="d-side right">
+              <div class="d-score">${m.gv}${shieldV}</div>
+            </div>
+          </div>`;
+        wrap.appendChild(div);
+      });
+    }
+
+    function triggerGoalCelebration() {
+      const overlay = document.getElementById("goalVideoOverlay");
+      const video = document.getElementById("goalVideo");
+
+      video.src = GOAL_VIDEO_URL;
+      video.currentTime = 0;
+      overlay.style.display = "flex";
+
+      // Fade In
+      setTimeout(() => {
+        overlay.classList.add("show");
+      }, 50);
+
+      video.play().catch(err => {
+        console.error("Error reproduciendo vídeo", err);
+        hideVideoOverlay();
+      });
+
+      video.onended = () => {
+        hideVideoOverlay();
+      };
+    }
+
+    function hideVideoOverlay() {
+      const overlay = document.getElementById("goalVideoOverlay");
+      overlay.classList.remove("show");
+
+      // Esperar al fadeOut antes de ocultar
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 1000);
+    }
+
+    function startTicker() {
+      if (ticker) return;
+      ticker = setInterval(() => {
+        const any = ["m1", "m2"].some((k) => local[k]?.running);
+        if (any) render();
+      }, 500);
+    }
+
+    function stopTicker() {
+      clearInterval(ticker);
+      ticker = null;
+    }
+
+    function loadAds(ads) {
+      if (adsLoaded || !ads?.length) {
+        if (!ads?.length) document.getElementById("banner").style.display = "none";
+        return;
+      }
+      adsLoaded = true;
+      const track = document.getElementById("adsTrack");
+      track.innerHTML = "";
+      [...ads, ...ads].forEach((src) => {
+        const img = document.createElement("img");
+        img.src = src;
+        track.appendChild(img);
+      });
+    }
+
+    function applyState(e) {
+      if (!e) return;
+
+      ["m1", "m2"].forEach((k) => {
+        if (!e[k]) {
+          local[k] = null;
           return;
         }
+        local[k] = Object.assign({}, e[k]);
+      });
+      local.mode = e.mode || 1;
 
-        wrap.innerHTML = "";
-        active.forEach((m) => {
-          const matchNum = m === local.m1 ? 1 : 2;
-          const dur = (parseInt(m.duration) || 45) * 60;
-          const half = m.half || 1;
-          const elapsed = currentElapsed(m);
-          const isExtra = elapsed >= (half === 1 ? dur : dur * 2);
-          const time = fmt(elapsed);
+      if (e.ads) loadAds(e.ads);
 
-          // Detecta el tamaño cada vez que se renderiza
-          const isMobile = window.innerWidth <= 768;
-
-          // Texto del periodo adaptado a móvil o escritorio
-          let halfStr = half === 1 ? "1ª PARTE" : "2ª PARTE";
-          if (isMobile) halfStr = half === 1 ? "1ª P" : "2ª P";
-
-          const period =
-            active.length === 2 ? `CAMPO ${matchNum} · ${halfStr}` : halfStr;
-
-          const shieldL = m.shieldLocal
-            ? `<img class="d-shield" src="${m.shieldLocal}">`
-            : "";
-          const shieldV = m.shieldVisitor
-            ? `<img class="d-shield" src="${m.shieldVisitor}">`
-            : "";
-
-          const div = document.createElement("div");
-          div.className = "d-match";
-          div.innerHTML = `
-            <div class="d-top">
-              ${m.categoria ? `<div class="d-categoria">${esc(m.categoria)}</div>` : ""}
-            </div>
-
-            <div class="d-teams">
-              <div class="d-team left">${esc(m.local)}</div>
-              <div class="d-period">${period}</div>
-              <div class="d-team right">${esc(m.visitor)}</div>
-            </div>
-
-            <div class="d-mid">
-              <div class="d-side left">
-                <div class="d-score">${m.gl}${shieldL}</div>
-              </div>
-              <div class="d-side timer">
-                <div class="d-timer${isExtra ? " extra" : ""}">${time}</div>
-              </div>
-              <div class="d-side right">
-                <div class="d-score">${m.gv}${shieldV}</div>
-              </div>
-            </div>`;
-          wrap.appendChild(div);
-        });
-      }
-
-      // ── TICKER ────────────────────────────────────────────────────────────
-      function startTicker() {
-        if (ticker) return;
-        ticker = setInterval(() => {
-          const any = ["m1", "m2"].some((k) => local[k]?.running);
-          if (any) render();
-        }, 500);
-      }
-      function stopTicker() {
-        clearInterval(ticker);
-        ticker = null;
-      }
-
-      // ── PUBLICIDAD ────────────────────────────────────────────────────────
-      function loadAds(ads) {
-        if (adsLoaded || !ads?.length) {
-          if (!ads?.length)
-            document.getElementById("banner").style.display = "none";
-          return;
-        }
-        adsLoaded = true;
-        const track = document.getElementById("adsTrack");
-        track.innerHTML = "";
-        [...ads, ...ads].forEach((src) => {
-          const img = document.createElement("img");
-          img.src = src;
-          track.appendChild(img);
-        });
-      }
-
-      // ── APLICAR ESTADO REMOTO ─────────────────────────────────────────────
-      function applyState(e) {
-        if (!e) return;
-        ["m1", "m2"].forEach((k) => {
-          if (!e[k]) {
-            local[k] = null;
-            return;
+      // Detección de gol del equipo LOCAL
+      if (e.goalVideoEnabled !== false) {
+        [1, 2].forEach(n => {
+          const match = local['m' + n];
+          if (match && match.gl > (prevGl[n] || 0)) {
+            triggerGoalCelebration();
           }
-          local[k] = Object.assign({}, e[k]);
+          if (match) prevGl[n] = match.gl;
         });
-        local.mode = e.mode || 1;
-        if (e.ads) loadAds(e.ads);
-        const anyRunning = ["m1", "m2"].some((k) => local[k]?.running);
-        if (anyRunning) startTicker();
-        else stopTicker();
-        render();
       }
 
-      // ── SUPABASE ──────────────────────────────────────────────────────────
-      async function init() {
-        try {
-          const { data: tsData } = await sb.rpc("get_server_time");
-          if (tsData) serverOffset = new Date(tsData).getTime() - Date.now();
-        } catch (e) {}
+      const anyRunning = ["m1", "m2"].some((k) => local[k]?.running);
+      if (anyRunning) startTicker();
+      else stopTicker();
 
-        const { data } = await sb
-          .from("marcador_estado")
-          .select("estado")
-          .eq("id", 1)
-          .single();
-        if (data) applyState(data.estado);
+      render();
+    }
 
-        sb.channel("marcador")
-          .on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "marcador_estado",
-              filter: "id=eq.1",
-            },
-            (payload) => {
-              applyState(payload.new.estado);
-            },
-          )
-          .subscribe();
-      }
+    async function init() {
+      try {
+        const { data: tsData } = await sb.rpc("get_server_time");
+        if (tsData) serverOffset = new Date(tsData).getTime() - Date.now();
+      } catch (e) {}
 
-      init();
-    </script>
-  </body>
+      const { data } = await sb.from("marcador_estado").select("estado").eq("id", 1).single();
+      if (data) applyState(data.estado);
+
+      sb.channel("marcador")
+        .on("postgres_changes", {
+          event: "UPDATE",
+          schema: "public",
+          table: "marcador_estado",
+          filter: "id=eq.1"
+        }, (payload) => {
+          applyState(payload.new.estado);
+        })
+        .subscribe();
+    }
+
+    init();
+  </script>
+</body>
 </html>
