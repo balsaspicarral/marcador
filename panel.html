@@ -32,7 +32,6 @@
   }
   .btn-display:active { background: var(--accent); color: #000; }
 
-  /* BODY — 1 columna por defecto, 2 en escritorio cuando hay 2 partidos */
   .body {
     padding: 14px;
     display: flex;
@@ -42,11 +41,8 @@
     margin: 0 auto;
   }
 
-  /* En escritorio con 2 partidos activos */
   @media (min-width: 900px) {
-    body.two-matches .body {
-      max-width: 1100px;
-    }
+    body.two-matches .body { max-width: 1100px; }
     body.two-matches .matches-wrapper {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -146,10 +142,6 @@
     cursor: pointer; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px;
   }
   .settime-btn:active { background: var(--accent); color: #000; }
-  .dur-row input {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    padding: 6px 8px; font-size: 0.85rem; border-radius: 6px; width: 52px; text-align: center;
-  }
 
   .ads-list { display: flex; flex-wrap: wrap; gap: 8px; }
   .ad-thumb {
@@ -336,7 +328,7 @@
         </div>
       </div>
     </div>
-  </div><!-- /matches-wrapper -->
+  </div>
 
   <!-- PUBLICIDAD -->
   <div class="card">
@@ -388,7 +380,86 @@ function currentElapsed(n) {
   return match.elapsedAtPause
 }
 
-// ── SUPABASE PUSH ────────────────────────────────────────────────────
+// ── NUEVA FUNCIÓN PARA SUBIR A STORAGE ───────────────────────────────
+async function uploadToStorage(file, folder) {
+  const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+  const { error } = await sb.storage
+    .from('marcador')
+    .upload(`${folder}/${fileName}`, file, { upsert: true });
+
+  if (error) {
+    console.error(error);
+    if (error.message.includes("row-level security")) {
+      alert("Error: La política de seguridad de Supabase no permite subir imágenes.\n\nVe a Storage → marcador → Policies y desactiva RLS o permite INSERT.");
+    } else {
+      alert("Error al subir: " + error.message);
+    }
+    return null;
+  }
+
+  const { data } = sb.storage.from('marcador').getPublicUrl(`${folder}/${fileName}`);
+  return data.publicUrl;
+}
+
+// ── ESCUDOS (MODIFICADO) ─────────────────────────────────────────────
+async function loadShield(key, input) {
+  const file = input.files[0]; 
+  if (!file) return;
+
+  const url = await uploadToStorage(file, 'escudos');
+  if (!url) return;
+
+  const n = key.slice(-1);
+  const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor';
+  m(n)[side] = url;
+
+  document.getElementById('sb_'+key).innerHTML = '<img src="'+url+'">';
+  document.getElementById('srm_'+key).style.display = '';
+  push();
+}
+
+function removeShield(key) {
+  const n    = key.slice(-1)
+  const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
+  m(n)[side] = null
+  document.getElementById('sb_'+key).innerHTML = '<span>Escudo</span>'
+  document.getElementById('srm_'+key).style.display = 'none'
+  document.getElementById('sf_'+key).value = ''
+  push()
+}
+
+// ── PUBLICIDAD (MODIFICADO) ──────────────────────────────────────────
+async function addAds(input) {
+  const files = Array.from(input.files); 
+  if (!files.length) return;
+
+  for (const file of files) {
+    const url = await uploadToStorage(file, 'ads');
+    if (url) S.ads.push(url);
+  }
+  renderAds();
+  push();
+  input.value = '';
+}
+
+function removeAd(i) {
+  S.ads.splice(i, 1)
+  renderAds(); push()
+}
+
+function renderAds() {
+  const list = document.getElementById('adsList')
+  list.innerHTML = ''
+  S.ads.forEach((src, i) => {
+    const div = document.createElement('div')
+    div.className = 'ad-thumb'
+    div.innerHTML = '<img src="'+src+'"><button class="ad-rm" onclick="removeAd('+i+')">x</button>'
+    list.appendChild(div)
+  })
+}
+
+// ── EL RESTO DEL CÓDIGO SE MANTIENE EXACTAMENTE IGUAL ───────────────
 let pushing = false
 
 function readFromDOM(n) {
@@ -414,7 +485,6 @@ async function push() {
   pushing = false
 }
 
-// ── APPLY STATE ──────────────────────────────────────────────────────
 function applyState(e, isRemote) {
   if (!e) return
   S.mode = e.mode || 1
@@ -425,7 +495,6 @@ function applyState(e, isRemote) {
     if (!src) return
 
     const wasRunning = m(n).running
-
     Object.assign(m(n), src)
 
     if (isRemote) {
@@ -465,7 +534,6 @@ function applyState(e, isRemote) {
   document.getElementById('vis1').checked = e.m1?.active !== false
   if (e.m2) document.getElementById('vis2').checked = e.m2?.active !== false
 
-  // Clase en body para layout 2 columnas
   document.body.classList.toggle('two-matches', S.mode===2)
 }
 
@@ -474,7 +542,6 @@ function setStatus(ok) {
   document.getElementById('statusTxt').textContent = ok ? 'Conectado' : 'Sin conexion'
 }
 
-// ── MODO ─────────────────────────────────────────────────────────────
 function setMode(mode) {
   S.mode = mode
   document.getElementById('m1btn').classList.toggle('active', mode===1)
@@ -484,7 +551,6 @@ function setMode(mode) {
   push()
 }
 
-// ── PARTES ───────────────────────────────────────────────────────────
 function setHalf(n, half) {
   if (m(n).running) return
   m(n).half           = half
@@ -497,7 +563,6 @@ function setHalf(n, half) {
   push()
 }
 
-// ── GOLES ────────────────────────────────────────────────────────────
 function goal(n, side, delta) {
   if (side==='l') m(n).gl = Math.max(0, m(n).gl+delta)
   else            m(n).gv = Math.max(0, m(n).gv+delta)
@@ -505,7 +570,6 @@ function goal(n, side, delta) {
   push()
 }
 
-// ── CRONOMETRO ───────────────────────────────────────────────────────
 async function startTimer(n) {
   if (m(n).running) return
   const { data: tsData } = await sb.rpc('get_server_time')
@@ -563,65 +627,6 @@ function refreshTimerPanel(n) {
   el.className   = 'timer-display'+(e >= mxS(n) ? ' extra' : '')
 }
 
-// ── ESCUDOS ──────────────────────────────────────────────────────────
-function loadShield(key, input) {
-  const file = input.files[0]; if (!file) return
-  const reader = new FileReader()
-  reader.onload = e => {
-    const src  = e.target.result
-    const n    = key.slice(-1)
-    const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
-    m(n)[side] = src
-    document.getElementById('sb_'+key).innerHTML = '<img src="'+src+'">'
-    document.getElementById('srm_'+key).style.display = ''
-    push()
-  }
-  reader.readAsDataURL(file)
-}
-
-function removeShield(key) {
-  const n    = key.slice(-1)
-  const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
-  m(n)[side] = null
-  document.getElementById('sb_'+key).innerHTML = '<span>Escudo</span>'
-  document.getElementById('srm_'+key).style.display = 'none'
-  document.getElementById('sf_'+key).value = ''
-  push()
-}
-
-// ── PUBLICIDAD ───────────────────────────────────────────────────────
-function addAds(input) {
-  const files = Array.from(input.files); if (!files.length) return
-  let pending = files.length
-  files.forEach(file => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      S.ads.push(e.target.result)
-      pending--
-      if (pending===0) { renderAds(); push() }
-    }
-    reader.readAsDataURL(file)
-  })
-  input.value = ''
-}
-
-function removeAd(i) {
-  S.ads.splice(i, 1)
-  renderAds(); push()
-}
-
-function renderAds() {
-  const list = document.getElementById('adsList')
-  list.innerHTML = ''
-  S.ads.forEach((src, i) => {
-    const div = document.createElement('div')
-    div.className = 'ad-thumb'
-    div.innerHTML = '<img src="'+src+'"><button class="ad-rm" onclick="removeAd('+i+')">x</button>'
-    list.appendChild(div)
-  })
-}
-
-// ── RESET TOTAL ──────────────────────────────────────────────────────
 function resetAll() {
   ;[1,2].forEach(n => {
     pauseTimer(n)
@@ -634,7 +639,6 @@ function resetAll() {
   push()
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────
 async function init() {
   document.getElementById('block2').style.display = 'none'
 

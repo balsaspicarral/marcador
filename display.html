@@ -189,9 +189,9 @@
       }
 
       .d-shield {
-        width: clamp(40px, 15vw, 220px);
+        width: auto;
         height: clamp(40px, 20vw, 220px);
-        object-fit: cover;
+        object-fit: contain;
         filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
         position: absolute;
       }
@@ -344,31 +344,6 @@
         .two-matches .d-side.left .d-score::after {
           position: absolute;
           left: 190%;
-        }
-
-        .d-shield {
-          width: clamp(30px, 25vw, 200px);
-          height: clamp(30px, 25vw, 200px);
-        }
-        .two-matches .d-shield {
-          width: clamp(30px, 15vw, 200px);
-          height: clamp(30px, 15vw, 200px);
-        }
-        .d-side.left .d-shield {
-          bottom: 5%;
-          right: 5%;
-        }
-        .two-matches .d-side.left .d-shield {
-          right: -60%;
-          bottom: 0%;
-        }
-        .d-side.right .d-shield {
-          bottom: 5%;
-          left: 5%;
-        }
-        .two-matches .d-side.right .d-shield {
-          left: -60%;
-          bottom: 0%;
         }
 
         .d-timer {
