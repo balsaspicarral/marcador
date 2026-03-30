@@ -20,7 +20,7 @@
     position: sticky; top: 0; z-index: 10; gap: 10px;
   }
   .header h1 { font-size: 1.1rem; letter-spacing: 2px; color: var(--accent); font-weight: 700; white-space: nowrap; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
+  .header-right { display: flex; align-items: center; justify-content: space-evenly; gap: 10px; }
   .status { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transition: background 0.3s; }
   .dot.ok { background: var(--success); }
@@ -32,22 +32,29 @@
   }
   .btn-display:active { background: var(--accent); color: #000; }
 
+  /* Checkbox video gol */
+  .video-toggle {
+    width: 100%;
+    display: flex; align-items: center; gap: 6px;
+    justify-content: center;
+    font-size: 1rem; color: var(--muted); cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 10px 0;
+    gap: 15px;
+  }
+  .video-toggle input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
   .body {
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-width: 500px;
-    margin: 0 auto;
+    padding: 14px; display: flex; flex-direction: column; gap: 14px;
+    max-width: 500px; margin: 0 auto;
   }
 
   @media (min-width: 900px) {
     body.two-matches .body { max-width: 1100px; }
     body.two-matches .matches-wrapper {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      align-items: start;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start;
     }
   }
 
@@ -174,6 +181,7 @@
 <div class="header">
   <h1>&#9917; MARCADOR</h1>
   <div class="header-right">
+    
     <button class="btn-display" onclick="openDisplay()">&#9654; Display</button>
     <div class="status">
       <div class="dot" id="dot"></div>
@@ -183,6 +191,9 @@
 </div>
 
 <div class="body">
+  <label class="video-toggle">
+    <input type="checkbox" id="videoGolEnabled" checked> VIDEO GOL
+  </label>
   <div class="mode-row">
     <button class="modeBtn active" id="m1btn" onclick="setMode(1)">1 Partido</button>
     <button class="modeBtn"        id="m2btn" onclick="setMode(2)">2 Partidos</button>
@@ -344,10 +355,7 @@
 </div>
 
 <script>
-// ── AUTH ─────────────────────────────────────────────────────────────
-if (localStorage.getItem('auth') !== 'ok') {
-  location.href = 'index.html'
-}
+if (localStorage.getItem('auth') !== 'ok') location.href = 'index.html'
 
 function openDisplay() {
   window.open('display.html', '_blank', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no')
@@ -358,8 +366,7 @@ const SUPABASE_KEY = 'sb_publishable_GqB2bMe7QDqOdVFIsekJUw_aQHCifob'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const S = {
-  mode: 1,
-  ads: [],
+  mode: 1, ads: [],
   m: [null,
     { active:true, categoria:'', local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 },
     { active:true, categoria:'', local:'LOCAL', visitor:'VISITANTE', gl:0, gv:0, elapsed:0, running:false, duration:45, half:1, shieldLocal:null, shieldVisitor:null, startedAt:null, elapsedAtPause:0 }
@@ -367,99 +374,28 @@ const S = {
 }
 const ivl = { 1:null, 2:null }
 
-const m    = n => S.m[n]
-const dur  = n => (parseInt(document.getElementById('dur'+n).value)||45)*60
-const mxS  = n => m(n).half===1 ? dur(n) : dur(n)*2
-const fmt  = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')
+const m   = n => S.m[n]
+const dur = n => (parseInt(document.getElementById('dur'+n).value)||45)*60
+const mxS = n => m(n).half===1 ? dur(n) : dur(n)*2
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')
 
 function currentElapsed(n) {
   const match = m(n)
-  if (match.running && match.startedAt) {
+  if (match.running && match.startedAt)
     return Math.max(0, match.elapsedAtPause + Math.floor((Date.now() - match.startedAt) / 1000))
-  }
   return match.elapsedAtPause
 }
 
-// ── NUEVA FUNCIÓN PARA SUBIR A STORAGE ───────────────────────────────
+// ── STORAGE ──────────────────────────────────────────────────────────
 async function uploadToStorage(file, folder) {
-  const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-
-  const { error } = await sb.storage
-    .from('marcador')
-    .upload(`${folder}/${fileName}`, file, { upsert: true });
-
-  if (error) {
-    console.error(error);
-    if (error.message.includes("row-level security")) {
-      alert("Error: La política de seguridad de Supabase no permite subir imágenes.\n\nVe a Storage → marcador → Policies y desactiva RLS o permite INSERT.");
-    } else {
-      alert("Error al subir: " + error.message);
-    }
-    return null;
-  }
-
-  const { data } = sb.storage.from('marcador').getPublicUrl(`${folder}/${fileName}`);
-  return data.publicUrl;
+  const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+  const { error } = await sb.storage.from('marcador').upload(`${folder}/${fileName}`, file, { upsert: true })
+  if (error) { console.error(error); return null }
+  const { data } = sb.storage.from('marcador').getPublicUrl(`${folder}/${fileName}`)
+  return data.publicUrl
 }
 
-// ── ESCUDOS (MODIFICADO) ─────────────────────────────────────────────
-async function loadShield(key, input) {
-  const file = input.files[0]; 
-  if (!file) return;
-
-  const url = await uploadToStorage(file, 'escudos');
-  if (!url) return;
-
-  const n = key.slice(-1);
-  const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor';
-  m(n)[side] = url;
-
-  document.getElementById('sb_'+key).innerHTML = '<img src="'+url+'">';
-  document.getElementById('srm_'+key).style.display = '';
-  push();
-}
-
-function removeShield(key) {
-  const n    = key.slice(-1)
-  const side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
-  m(n)[side] = null
-  document.getElementById('sb_'+key).innerHTML = '<span>Escudo</span>'
-  document.getElementById('srm_'+key).style.display = 'none'
-  document.getElementById('sf_'+key).value = ''
-  push()
-}
-
-// ── PUBLICIDAD (MODIFICADO) ──────────────────────────────────────────
-async function addAds(input) {
-  const files = Array.from(input.files); 
-  if (!files.length) return;
-
-  for (const file of files) {
-    const url = await uploadToStorage(file, 'ads');
-    if (url) S.ads.push(url);
-  }
-  renderAds();
-  push();
-  input.value = '';
-}
-
-function removeAd(i) {
-  S.ads.splice(i, 1)
-  renderAds(); push()
-}
-
-function renderAds() {
-  const list = document.getElementById('adsList')
-  list.innerHTML = ''
-  S.ads.forEach((src, i) => {
-    const div = document.createElement('div')
-    div.className = 'ad-thumb'
-    div.innerHTML = '<img src="'+src+'"><button class="ad-rm" onclick="removeAd('+i+')">x</button>'
-    list.appendChild(div)
-  })
-}
-
-// ── EL RESTO DEL CÓDIGO SE MANTIENE EXACTAMENTE IGUAL ───────────────
+// ── PUSH ─────────────────────────────────────────────────────────────
 let pushing = false
 
 function readFromDOM(n) {
@@ -470,33 +406,43 @@ function readFromDOM(n) {
   m(n).active    = document.getElementById('vis'+n).checked
 }
 
-async function push() {
+async function push(golLocal) {
   if (pushing) return
   pushing = true
-  readFromDOM(1)
-  readFromDOM(2)
+  readFromDOM(1); readFromDOM(2)
   const estado = {
-    mode: S.mode,
-    ads:  S.ads,
+    mode: S.mode, ads: S.ads,
     m1: Object.assign({}, m(1)),
-    m2: S.mode===2 ? Object.assign({}, m(2)) : null
+    m2: S.mode===2 ? Object.assign({}, m(2)) : null,
+    // Señal de gol local: timestamp único cada vez que marca el local
+    golLocalTs: golLocal ? Date.now() : (S.lastGolLocalTs || null)
   }
+  S.lastGolLocalTs = estado.golLocalTs
   await sb.from('marcador_estado').update({ estado, updated_at: new Date() }).eq('id', 1)
   pushing = false
 }
 
+// ── GOLES ────────────────────────────────────────────────────────────
+function goal(n, side, delta) {
+  if (side==='l') m(n).gl = Math.max(0, m(n).gl+delta)
+  else            m(n).gv = Math.max(0, m(n).gv+delta)
+  document.getElementById('scoreDisp'+n).textContent = m(n).gl+' - '+m(n).gv
+  // Si es gol local (suma) y el checkbox está activo, mandar señal
+  const esGolLocal = side==='l' && delta===1 && document.getElementById('videoGolEnabled').checked
+  push(esGolLocal)
+}
+
+// ── APPLY STATE ──────────────────────────────────────────────────────
 function applyState(e, isRemote) {
   if (!e) return
   S.mode = e.mode || 1
   if (e.ads) { S.ads = e.ads; renderAds() }
+  if (e.golLocalTs) S.lastGolLocalTs = e.golLocalTs
 
   ;[1,2].forEach(n => {
-    const src = e['m'+n]
-    if (!src) return
-
+    const src = e['m'+n]; if (!src) return
     const wasRunning = m(n).running
     Object.assign(m(n), src)
-
     if (isRemote) {
       if (src.running && !wasRunning) {
         document.getElementById('h1_'+n).disabled = true
@@ -512,11 +458,10 @@ function applyState(e, isRemote) {
         document.getElementById('tP'+n).style.display = 'none'
       }
     }
-
-    document.getElementById('cat'+n).value      = src.categoria || ''
-    document.getElementById('local'+n).value    = src.local     || ''
-    document.getElementById('visitor'+n).value  = src.visitor   || ''
-    document.getElementById('dur'+n).value      = src.duration  || 45
+    document.getElementById('cat'+n).value     = src.categoria || ''
+    document.getElementById('local'+n).value   = src.local     || ''
+    document.getElementById('visitor'+n).value = src.visitor   || ''
+    document.getElementById('dur'+n).value     = src.duration  || 45
     document.getElementById('scoreDisp'+n).textContent = m(n).gl+' - '+m(n).gv
     document.getElementById('h1_'+n).classList.toggle('active', src.half===1)
     document.getElementById('h2_'+n).classList.toggle('active', src.half===2)
@@ -533,7 +478,6 @@ function applyState(e, isRemote) {
   document.getElementById('block2').style.display = S.mode===2 ? '' : 'none'
   document.getElementById('vis1').checked = e.m1?.active !== false
   if (e.m2) document.getElementById('vis2').checked = e.m2?.active !== false
-
   document.body.classList.toggle('two-matches', S.mode===2)
 }
 
@@ -553,29 +497,18 @@ function setMode(mode) {
 
 function setHalf(n, half) {
   if (m(n).running) return
-  m(n).half           = half
-  m(n).elapsed        = half===1 ? 0 : dur(n)
-  m(n).elapsedAtPause = m(n).elapsed
-  m(n).startedAt      = null
+  m(n).half = half; m(n).elapsed = half===1 ? 0 : dur(n)
+  m(n).elapsedAtPause = m(n).elapsed; m(n).startedAt = null
   document.getElementById('h1_'+n).classList.toggle('active', half===1)
   document.getElementById('h2_'+n).classList.toggle('active', half===2)
-  refreshTimerPanel(n)
-  push()
-}
-
-function goal(n, side, delta) {
-  if (side==='l') m(n).gl = Math.max(0, m(n).gl+delta)
-  else            m(n).gv = Math.max(0, m(n).gv+delta)
-  document.getElementById('scoreDisp'+n).textContent = m(n).gl+' - '+m(n).gv
-  push()
+  refreshTimerPanel(n); push()
 }
 
 async function startTimer(n) {
   if (m(n).running) return
   const { data: tsData } = await sb.rpc('get_server_time')
   const serverNow = tsData ? new Date(tsData).getTime() : Date.now()
-  m(n).running        = true
-  m(n).startedAt      = serverNow
+  m(n).running = true; m(n).startedAt = serverNow
   m(n).elapsedAtPause = m(n).elapsedAtPause || 0
   document.getElementById('h1_'+n).disabled = true
   document.getElementById('h2_'+n).disabled = true
@@ -588,10 +521,8 @@ async function startTimer(n) {
 function pauseTimer(n) {
   if (!m(n).running) return
   clearInterval(ivl[n]); ivl[n] = null
-  m(n).elapsedAtPause = currentElapsed(n)
-  m(n).elapsed        = m(n).elapsedAtPause
-  m(n).running        = false
-  m(n).startedAt      = null
+  m(n).elapsedAtPause = currentElapsed(n); m(n).elapsed = m(n).elapsedAtPause
+  m(n).running = false; m(n).startedAt = null
   document.getElementById('h1_'+n).disabled = false
   document.getElementById('h2_'+n).disabled = false
   document.getElementById('tS'+n).style.display = ''
@@ -601,23 +532,18 @@ function pauseTimer(n) {
 
 function resetTimer(n) {
   pauseTimer(n)
-  m(n).elapsed        = m(n).half===1 ? 0 : dur(n)
-  m(n).elapsedAtPause = m(n).elapsed
-  m(n).startedAt      = null
-  refreshTimerPanel(n)
-  push()
+  m(n).elapsed = m(n).half===1 ? 0 : dur(n)
+  m(n).elapsedAtPause = m(n).elapsed; m(n).startedAt = null
+  refreshTimerPanel(n); push()
 }
 
 function setManualTime(n) {
-  const mins  = parseInt(document.getElementById('setMin'+n).value) || 0
-  const secs  = parseInt(document.getElementById('setSec'+n).value) || 0
-  const total = mins * 60 + secs
+  const mins = parseInt(document.getElementById('setMin'+n).value)||0
+  const secs = parseInt(document.getElementById('setSec'+n).value)||0
+  const total = mins*60+secs
   if (m(n).running) pauseTimer(n)
-  m(n).elapsed        = total
-  m(n).elapsedAtPause = total
-  m(n).startedAt      = null
-  refreshTimerPanel(n)
-  push()
+  m(n).elapsed = total; m(n).elapsedAtPause = total; m(n).startedAt = null
+  refreshTimerPanel(n); push()
 }
 
 function refreshTimerPanel(n) {
@@ -627,6 +553,49 @@ function refreshTimerPanel(n) {
   el.className   = 'timer-display'+(e >= mxS(n) ? ' extra' : '')
 }
 
+// ── ESCUDOS ──────────────────────────────────────────────────────────
+async function loadShield(key, input) {
+  const file = input.files[0]; if (!file) return
+  const url = await uploadToStorage(file, 'escudos'); if (!url) return
+  const n = key.slice(-1), side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
+  m(n)[side] = url
+  document.getElementById('sb_'+key).innerHTML = '<img src="'+url+'">'
+  document.getElementById('srm_'+key).style.display = ''
+  push()
+}
+
+function removeShield(key) {
+  const n = key.slice(-1), side = key[0]==='l' ? 'shieldLocal' : 'shieldVisitor'
+  m(n)[side] = null
+  document.getElementById('sb_'+key).innerHTML = '<span>Escudo</span>'
+  document.getElementById('srm_'+key).style.display = 'none'
+  document.getElementById('sf_'+key).value = ''
+  push()
+}
+
+// ── PUBLICIDAD ───────────────────────────────────────────────────────
+async function addAds(input) {
+  const files = Array.from(input.files); if (!files.length) return
+  for (const file of files) {
+    const url = await uploadToStorage(file, 'ads'); if (url) S.ads.push(url)
+  }
+  renderAds(); push(); input.value = ''
+}
+
+function removeAd(i) { S.ads.splice(i,1); renderAds(); push() }
+
+function renderAds() {
+  const list = document.getElementById('adsList')
+  list.innerHTML = ''
+  S.ads.forEach((src,i) => {
+    const div = document.createElement('div')
+    div.className = 'ad-thumb'
+    div.innerHTML = '<img src="'+src+'"><button class="ad-rm" onclick="removeAd('+i+')">x</button>'
+    list.appendChild(div)
+  })
+}
+
+// ── RESET ────────────────────────────────────────────────────────────
 function resetAll() {
   ;[1,2].forEach(n => {
     pauseTimer(n)
@@ -639,29 +608,18 @@ function resetAll() {
   push()
 }
 
+// ── INIT ─────────────────────────────────────────────────────────────
 async function init() {
   document.getElementById('block2').style.display = 'none'
-
   const { data, error } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
   if (!error && data) {
     const e = data.estado
-    ;[1,2].forEach(n => {
-      if (e['m'+n]?.running && !e['m'+n]?.startedAt) e['m'+n].running = false
-    })
-    applyState(e, false)
-    setStatus(true)
+    ;[1,2].forEach(n => { if (e['m'+n]?.running && !e['m'+n]?.startedAt) e['m'+n].running = false })
+    applyState(e, false); setStatus(true)
   }
-
   sb.channel('marcador-panel')
-    .on('postgres_changes', {
-      event:  'UPDATE',
-      schema: 'public',
-      table:  'marcador_estado',
-      filter: 'id=eq.1'
-    }, payload => {
-      if (pushing) return
-      applyState(payload.new.estado, true)
-    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'marcador_estado', filter:'id=eq.1' },
+      payload => { if (pushing) return; applyState(payload.new.estado, true) })
     .subscribe(status => setStatus(status === 'SUBSCRIBED'))
 }
 
