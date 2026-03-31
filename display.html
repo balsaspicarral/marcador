@@ -457,7 +457,6 @@
     </div>
     <!-- Preload silencioso de ambos vídeos -->
     <video id="preloadDesktop" src="gol.mp4"      preload="auto" style="display:none"></video>
-    <video id="preloadMobile"  src="golMovil.mp4" preload="auto" style="display:none"></video>
 
     <script>
       const SUPABASE_URL = "https://uodebjemfpiocpluzwab.supabase.co"
@@ -488,13 +487,27 @@
         video.currentTime = 0
       })
 
+      // function playGolVideo() {
+      //   const isMobile = window.innerWidth <= 768
+      //   video.src = isMobile ? 'golMovil.mp4' : 'gol.mp4'
+      //   overlay.classList.add('visible')
+      //   video.currentTime = 0
+      //   video.play().catch(() => {})
+      // }
+
       function playGolVideo() {
-        const isMobile = window.innerWidth <= 768
-        video.src = isMobile ? 'golMovil.mp4' : 'gol.mp4'
+        const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0
+
+        // Si es móvil o dispositivo táctil → no hacer nada
+        if (isMobile) return
+
+        // Solo en ordenador
+        video.src = 'gol.mp4'
         overlay.classList.add('visible')
         video.currentTime = 0
         video.play().catch(() => {})
       }
+
 
       // ── RENDER ────────────────────────────────────────────────────
       function render() {

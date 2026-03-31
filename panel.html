@@ -181,7 +181,6 @@
 <div class="header">
   <h1>&#9917; MARCADOR</h1>
   <div class="header-right">
-    
     <button class="btn-display" onclick="openDisplay()">&#9654; Display</button>
     <div class="status">
       <div class="dot" id="dot"></div>
@@ -386,7 +385,6 @@ function currentElapsed(n) {
   return match.elapsedAtPause
 }
 
-// ── STORAGE ──────────────────────────────────────────────────────────
 async function uploadToStorage(file, folder) {
   const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const { error } = await sb.storage.from('marcador').upload(`${folder}/${fileName}`, file, { upsert: true })
@@ -395,7 +393,6 @@ async function uploadToStorage(file, folder) {
   return data.publicUrl
 }
 
-// ── PUSH ─────────────────────────────────────────────────────────────
 let pushing = false
 
 function readFromDOM(n) {
@@ -414,7 +411,6 @@ async function push(golLocal) {
     mode: S.mode, ads: S.ads,
     m1: Object.assign({}, m(1)),
     m2: S.mode===2 ? Object.assign({}, m(2)) : null,
-    // Señal de gol local: timestamp único cada vez que marca el local
     golLocalTs: golLocal ? Date.now() : (S.lastGolLocalTs || null)
   }
   S.lastGolLocalTs = estado.golLocalTs
@@ -422,17 +418,14 @@ async function push(golLocal) {
   pushing = false
 }
 
-// ── GOLES ────────────────────────────────────────────────────────────
 function goal(n, side, delta) {
   if (side==='l') m(n).gl = Math.max(0, m(n).gl+delta)
   else            m(n).gv = Math.max(0, m(n).gv+delta)
   document.getElementById('scoreDisp'+n).textContent = m(n).gl+' - '+m(n).gv
-  // Si es gol local (suma) y el checkbox está activo, mandar señal
   const esGolLocal = side==='l' && delta===1 && document.getElementById('videoGolEnabled').checked
   push(esGolLocal)
 }
 
-// ── APPLY STATE ──────────────────────────────────────────────────────
 function applyState(e, isRemote) {
   if (!e) return
   S.mode = e.mode || 1
@@ -553,7 +546,6 @@ function refreshTimerPanel(n) {
   el.className   = 'timer-display'+(e >= mxS(n) ? ' extra' : '')
 }
 
-// ── ESCUDOS ──────────────────────────────────────────────────────────
 async function loadShield(key, input) {
   const file = input.files[0]; if (!file) return
   const url = await uploadToStorage(file, 'escudos'); if (!url) return
@@ -573,7 +565,6 @@ function removeShield(key) {
   push()
 }
 
-// ── PUBLICIDAD ───────────────────────────────────────────────────────
 async function addAds(input) {
   const files = Array.from(input.files); if (!files.length) return
   for (const file of files) {
@@ -595,7 +586,6 @@ function renderAds() {
   })
 }
 
-// ── RESET ────────────────────────────────────────────────────────────
 function resetAll() {
   ;[1,2].forEach(n => {
     pauseTimer(n)
@@ -608,7 +598,6 @@ function resetAll() {
   push()
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────
 async function init() {
   document.getElementById('block2').style.display = 'none'
   const { data, error } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
