@@ -71,12 +71,13 @@
 
       .d-categoria {
         font-family: sans-serif;
-        font-size: clamp(1.8rem, 8vw, 3.5rem);
+        font-size: clamp(1.8rem, 8vw, 4rem);
+        font-weight: bold;
         color: #fff;
         line-height: 1;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         text-align: center;
-        padding: 10px 0;
+        padding: 20px 0 10px 0;
       }
 
       .two-matches .d-categoria {
@@ -97,7 +98,7 @@
 
       .d-team {
         font-family: "Decalotype", sans-serif;
-        font-size: clamp(1.8rem, 6vw, 6rem);
+        font-size: clamp(1.8rem, 6vw, 7rem);
         color: #f5d000;
         line-height: 1;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -159,22 +160,27 @@
         color: #fff;
         line-height: 0.85;
         text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        position: relative;
+        position: absolute;
         height: 100%;
         bottom: 5%;
       }
       .d-side.left .d-score {
-        right: -10%;
-      }
-      .two-matches .d-side.left .d-score {
-        right: 0;
-        bottom: 20%;
+        right: 22%;
       }
       .d-side.right .d-score {
-        left: -10%;
+        left: 22%;
+      }
+
+      .two-matches .d-side .d-score {
+        position: absolute;
+      }
+
+      .two-matches .d-side.left .d-score {
+        right: 30%;
+        bottom: 20%;
       }
       .two-matches .d-side.right .d-score {
-        left: 0;
+        left: 30%;
         bottom: 20%;
       }
 
@@ -187,47 +193,44 @@
         height: clamp(40px, 20vw, 220px);
         object-fit: contain;
         filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
-        position: absolute;
+        position: relative;
       }
+
+
       .two-matches .d-shield {
-        width: clamp(40px, 10vw, 250px);
+        width: auto;
         height: clamp(40px, 10vw, 250px);
+        position: relative;
       }
       .d-side.left .d-shield {
-        bottom: 15%;
-        right: 75%;
-      }
-      .two-matches .d-side.left .d-shield {
-        right: 90%;
-        bottom: 17%;
+        bottom: -13%;
+        right: 25%;
       }
       .d-side.right .d-shield {
-        bottom: 15%;
-        left: 75%;
+        bottom: -13%;
+        left: 25%;
       }
+
+      .two-matches .d-side.left .d-shield {
+        right: 60%;
+        bottom: 17%;
+      }
+  
       .two-matches .d-side.right .d-shield {
-        left: 90%;
+        left: 60%;
         bottom: 17%;
       }
 
-      .d-timer-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 70%;
-        position: absolute;
-      }
       .d-timer {
         font-family: "Open Sans", sans-serif;
-        font-size: clamp(1.8rem, 14vw, 12rem);
+        font-size: clamp(1.8rem, 14vw, 16rem);
         font-weight: bold;
         letter-spacing: -5px;
         color: #fff;
         transition: color 0.4s;
       }
       .two-matches .d-timer {
-        font-size: clamp(1.2rem, 14vw, 12rem);
+        font-size: clamp(1.2rem, 14vw, 16rem);
         bottom: 20%;
         position: relative;
       }
@@ -237,7 +240,7 @@
 
       /* Banner publicidad */
       #banner {
-        height: clamp(60px, 12vh, 100px);
+        height: clamp(60px, 12vh, 150px);
         background: #111;
         overflow: hidden;
         display: flex;
@@ -247,9 +250,9 @@
       }
       .ads-track {
         display: flex;
-        gap: 200px;
+        gap: 500px;
         align-items: center;
-        animation: adsScroll 30s linear infinite;
+        animation: adsScroll 40s linear infinite;
         height: 100%;
       }
       .ads-track img {
@@ -311,9 +314,16 @@
         }
 
         .d-score {
-          font-size: clamp(3rem, 50vw, 15rem);
-          bottom: 10%;
+          font-size: clamp(3rem, 50vw, 18rem);
+          bottom: 5%;
           position: absolute;
+        }
+
+        .d-side.left .d-score {
+          right: -10%;
+        }
+        .d-side.right .d-score {
+          left: -10%;
         }
 
         .two-matches .d-score{
@@ -342,35 +352,37 @@
         }
 
         .d-shield {
-          width: clamp(30px, 25vw, 200px);
-          height: clamp(30px, 25vw, 200px);
+          width: auto;
+          height: clamp(30px, 25vw, 250px);
         }
+        .d-side.left .d-shield {
+          bottom: -30%;
+          right: -12%;
+        } 
+        .d-side.right .d-shield {
+          bottom: -30%;
+          left: -12%;
+        }
+
         .two-matches .d-shield {
           width: clamp(30px, 15vw, 200px);
           height: clamp(30px, 15vw, 200px);
         }
-        .d-side.left .d-shield {
-          bottom: 5%;
-          right: 5%;
-        }
         .two-matches .d-side.left .d-shield {
-          right: -60%;
+          right: -90%;
           bottom: 0%;
         }
-        .d-side.right .d-shield {
-          bottom: 5%;
-          left: 5%;
-        }
+        
         .two-matches .d-side.right .d-shield {
-          left: -60%;
+          left: -90%;
           bottom: 0%;
         }
 
         .d-timer {
-          font-size: clamp(1rem, 20vw, 10rem);
+          font-size: clamp(1rem, 20vw, 12rem);
           letter-spacing: 2px;
           position: absolute;
-          bottom: 80%;
+          bottom: 75%;
         }
 
         .two-matches .d-timer{
@@ -453,11 +465,9 @@
 
     <!-- OVERLAY VÍDEO GOL -->
     <div id="golOverlay">
-      <video id="golVideo" playsinline></video>
+      <video id="golVideo" playsinline preload="auto"></video>
     </div>
-    <!-- Preload silencioso de ambos vídeos -->
-    <video id="preloadDesktop" src="gol.mp4"      preload="auto" style="display:none"></video>
-
+    
     <script>
       const SUPABASE_URL = "https://uodebjemfpiocpluzwab.supabase.co"
       const SUPABASE_KEY = "sb_publishable_GqB2bMe7QDqOdVFIsekJUw_aQHCifob"
@@ -481,31 +491,47 @@
       // ── VÍDEO GOL ──────────────────────────────────────────────────
       const overlay = document.getElementById('golOverlay')
       const video   = document.getElementById('golVideo')
+      // Precarga real del vídeo al iniciar
+      video.src = 'gol.mp4'
+      video.load()
 
       video.addEventListener('ended', () => {
         overlay.classList.remove('visible')
         video.currentTime = 0
       })
 
-      // function playGolVideo() {
-      //   const isMobile = window.innerWidth <= 768
-      //   video.src = isMobile ? 'golMovil.mp4' : 'gol.mp4'
-      //   overlay.classList.add('visible')
-      //   video.currentTime = 0
-      //   video.play().catch(() => {})
-      // }
+      let golPlaying = false
 
       function playGolVideo() {
+        if (golPlaying) return
+        golPlaying = true
+
         const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0
+        if (isMobile) {
+          golPlaying = false
+          return
+        }
 
-        // Si es móvil o dispositivo táctil → no hacer nada
-        if (isMobile) return
-
-        // Solo en ordenador
-        video.src = 'gol.mp4'
         overlay.classList.add('visible')
+
         video.currentTime = 0
-        video.play().catch(() => {})
+
+        if (video.readyState < 2) {
+          video.load()
+        }
+
+        const tryPlay = () => {
+          video.play().catch(() => {
+            overlay.classList.remove('visible')
+            golPlaying = false
+          })
+        }
+
+        if (video.readyState >= 3) {
+          tryPlay()
+        } else {
+          video.addEventListener('canplay', tryPlay, { once: true })
+        }
       }
 
 
@@ -547,13 +573,24 @@
               <div class="d-team right">${esc(m.visitor)}</div>
             </div>
             <div class="d-mid">
-              <div class="d-side left"><div class="d-score">${m.gl}${shieldL}</div></div>
+              <div class="d-side left">
+                <div class="d-score">
+                  ${m.gl}
+                  </div>
+                  ${shieldL}
+              </div>
               <div class="d-side timer"><div class="d-timer${isExtra?' extra':''}">${time}</div></div>
-              <div class="d-side right"><div class="d-score">${m.gv}${shieldV}</div></div>
+              <div class="d-side right">
+                <div class="d-score">
+                  ${m.gv}
+                  </div>
+                  ${shieldV}
+              </div>
             </div>`
           wrap.appendChild(div)
         })
       }
+      
 
       // ── TICKER ────────────────────────────────────────────────────
       function startTicker() {
