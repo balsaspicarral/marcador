@@ -372,6 +372,7 @@ const S = {
   ]
 }
 const ivl = { 1:null, 2:null }
+let serverOffset = 0
 
 const m   = n => S.m[n]
 const dur = n => (parseInt(document.getElementById('dur'+n).value)||45)*60
@@ -381,7 +382,7 @@ const fmt = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padSt
 function currentElapsed(n) {
   const match = m(n)
   if (match.running && match.startedAt)
-    return Math.max(0, match.elapsedAtPause + Math.floor((Date.now() - match.startedAt) / 1000))
+    return Math.max(0, match.elapsedAtPause + Math.floor((Date.now() + serverOffset - match.startedAt) / 1000))
   return match.elapsedAtPause
 }
 
@@ -426,7 +427,7 @@ function goal(n, side, delta) {
   push(esGolLocal)
 }
 
-function applyState(e, isRemote) {
+function applyState(e) {
   if (!e) return
   S.mode = e.mode || 1
   if (e.ads) { S.ads = e.ads; renderAds() }
@@ -434,22 +435,19 @@ function applyState(e, isRemote) {
 
   ;[1,2].forEach(n => {
     const src = e['m'+n]; if (!src) return
-    const wasRunning = m(n).running
     Object.assign(m(n), src)
-    if (isRemote) {
-      if (src.running && !wasRunning) {
-        document.getElementById('h1_'+n).disabled = true
-        document.getElementById('h2_'+n).disabled = true
-        document.getElementById('tS'+n).style.display = 'none'
-        document.getElementById('tP'+n).style.display = ''
-        if (!ivl[n]) ivl[n] = setInterval(() => refreshTimerPanel(n), 500)
-      } else if (!src.running && wasRunning) {
-        clearInterval(ivl[n]); ivl[n] = null
-        document.getElementById('h1_'+n).disabled = false
-        document.getElementById('h2_'+n).disabled = false
-        document.getElementById('tS'+n).style.display = ''
-        document.getElementById('tP'+n).style.display = 'none'
-      }
+
+    // Estado de los botones/inputs del crono en función de si está corriendo.
+    // Se hace siempre igual (carga inicial o actualizacion remota) para que
+    // el intervalo de refresco quede arrancado en ambos casos.
+    document.getElementById('h1_'+n).disabled = !!src.running
+    document.getElementById('h2_'+n).disabled = !!src.running
+    document.getElementById('tS'+n).style.display = src.running ? 'none' : ''
+    document.getElementById('tP'+n).style.display = src.running ? '' : 'none'
+    if (src.running) {
+      if (!ivl[n]) ivl[n] = setInterval(() => refreshTimerPanel(n), 500)
+    } else {
+      clearInterval(ivl[n]); ivl[n] = null
     }
     document.getElementById('cat'+n).value     = src.categoria || ''
     document.getElementById('local'+n).value   = src.local     || ''
@@ -501,6 +499,7 @@ async function startTimer(n) {
   if (m(n).running) return
   const { data: tsData } = await sb.rpc('get_server_time')
   const serverNow = tsData ? new Date(tsData).getTime() : Date.now()
+  serverOffset = serverNow - Date.now()
   m(n).running = true; m(n).startedAt = serverNow
   m(n).elapsedAtPause = m(n).elapsedAtPause || 0
   document.getElementById('h1_'+n).disabled = true
@@ -600,15 +599,31 @@ function resetAll() {
 
 async function init() {
   document.getElementById('block2').style.display = 'none'
+
+  // Usar el mismo reloj de servidor que display.html.
+  try {
+    const { data: tsData } = await sb.rpc('get_server_time')
+    if (tsData) serverOffset = new Date(tsData).getTime() - Date.now()
+  } catch(e) {}
+
   const { data, error } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
   if (!error && data) {
     const e = data.estado
     ;[1,2].forEach(n => { if (e['m'+n]?.running && !e['m'+n]?.startedAt) e['m'+n].running = false })
-    applyState(e, false); setStatus(true)
+    applyState(e); setStatus(true)
   }
+
+  // Recalibrar el offset con el reloj del servidor cada minuto para que
+  // panel y display no se desvien entre si en sesiones largas.
+  setInterval(async () => {
+    try {
+      const { data: tsData } = await sb.rpc('get_server_time')
+      if (tsData) serverOffset = new Date(tsData).getTime() - Date.now()
+    } catch(e) {}
+  }, 60000)
   sb.channel('marcador-panel')
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'marcador_estado', filter:'id=eq.1' },
-      payload => { if (pushing) return; applyState(payload.new.estado, true) })
+      payload => { if (pushing) return; applyState(payload.new.estado) })
     .subscribe(status => setStatus(status === 'SUBSCRIBED'))
 }
 

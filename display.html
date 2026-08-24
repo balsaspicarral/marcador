@@ -642,6 +642,16 @@
           if (tsData) serverOffset = new Date(tsData).getTime() - Date.now()
         } catch(e) {}
 
+        // Recalibrar el offset cada minuto: esta pagina suele quedar abierta
+        // horas seguidas y el reloj del navegador puede irse desviando,
+        // lo que hacia que el crono se desajustara poco a poco frente al panel.
+        setInterval(async () => {
+          try {
+            const { data: tsData } = await sb.rpc('get_server_time')
+            if (tsData) serverOffset = new Date(tsData).getTime() - Date.now()
+          } catch(e) {}
+        }, 60000)
+
         const { data } = await sb.from('marcador_estado').select('estado').eq('id',1).single()
         if (data) {
           // En la carga inicial guardamos el ts sin reproducir el vídeo
