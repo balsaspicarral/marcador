@@ -1,0 +1,32 @@
+{
+  "id": "./panel-app",
+  "name": "Balsas Marcador – Panel",
+  "short_name": "Marcador Panel",
+  "description": "Panel privado de control del marcador del Balsas Picarral",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#e8c44a",
+  "icons": [
+    {
+      "src": "./icons/icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512-maskable.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg",
+      "purpose": "maskable"
+    }
+  ]
+}

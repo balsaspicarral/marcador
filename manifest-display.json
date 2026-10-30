@@ -1,0 +1,26 @@
+{
+  "id": "./display-app",
+  "name": "Balsas Marcador – Display",
+  "short_name": "Marcador",
+  "description": "Marcador en directo del Balsas Picarral",
+  "lang": "es",
+  "start_url": "./display.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#e8c44a",
+  "icons": [
+    {
+      "src": "./icons/display-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/display-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg",
+      "purpose": "any"
+    }
+  ]
+}
